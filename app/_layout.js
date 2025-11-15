@@ -11,6 +11,13 @@ export default function RootLayout() {
         <Stack.Screen name="syihab/splash" options={{ headerShown: false }} />
         <Stack.Screen name="syihab/onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="greek-salad-detail"
+          options={{
+            headerShown: true,         // mau pake header default biar ada tombol back
+            title: 'Classic Greek Salad',
+          }}
+        />
       </Stack>
     </GluestackUIProvider>
   );

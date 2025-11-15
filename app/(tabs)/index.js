@@ -3,6 +3,8 @@ import { ScrollView as RNScrollView } from "react-native";
 import { Container, temaKelompok } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { router } from "expo-router";
+
 
 import {
   VStack,
@@ -285,7 +287,19 @@ export default function SyihabTab() {
           >
             <HStack space="md">
               {filteredFeaturedRecipes.map((recipe) => (
-                <Pressable key={recipe.id}>
+                <Pressable 
+                  key={recipe.id}
+                  onPress={() => router.push({
+                    pathname: "/angela/detail",
+                    params: {
+                      id: recipe.id,
+                      name: recipe.name,
+                      image: recipe.image,
+                      rating: recipe.rating,
+                      time: recipe.time,
+                    }
+                  })}
+                >
                   <Box
                     w={170}
                     h={220}
@@ -366,7 +380,19 @@ export default function SyihabTab() {
           <VStack space="md">
             {filteredPopularRecipes.length > 0 ? (
               filteredPopularRecipes.map((recipe) => (
-                <Pressable key={recipe.id}>
+                <Pressable 
+                  key={recipe.id}
+                  onPress={() => router.push({
+                    pathname: "/angela/detail",
+                    params: {
+                      id: recipe.id,
+                      name: recipe.name,
+                      image: recipe.image,
+                      rating: recipe.rating,
+                      time: recipe.time,
+                    }
+                  })}
+                >
                   {/* Recipe Card */}
                   <HStack
                     space="md"
