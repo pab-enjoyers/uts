@@ -7,7 +7,7 @@ import {
   Box,
   Heading,
   Text,
-  Pressable
+  Pressable,
 } from "@gluestack-ui/themed";
 import { useLocalSearchParams, router } from "expo-router";
 import { recipeDetails } from "../../data/resep";
@@ -16,8 +16,9 @@ export default function RecipeDetail() {
   const params = useLocalSearchParams();
   const { id, name, image, rating, time } = params;
 
-  // State untuk tab switcher (Props & State requirement)
+  // State untuk tab switcher dan follow button (Props & State requirement)
   const [activeTab, setActiveTab] = useState("bahan");
+  const [isFollowing, setIsFollowing] = useState(false);
 
   // Ambil data resep sesuai nama atau gunakan default
   const currentRecipe =
@@ -51,16 +52,20 @@ export default function RecipeDetail() {
 
             {/* Back button overlay */}
             <IconButton
-              icon={<Ionicons name="arrow-back-outline" size={20} color="gray" />}
+              icon={
+                <Ionicons name="arrow-back-outline" size={20} color="gray" />
+              }
               onPress={() => router.back()}
-              position={{ top: '$4', left: '$4' }}
+              position={{ top: "$4", left: "$4" }}
             />
 
             {/* More options button */}
             <IconButton
-              icon={<Ionicons name="ellipsis-horizontal" size={20} color="gray" />}
+              icon={
+                <Ionicons name="ellipsis-horizontal" size={20} color="gray" />
+              }
               onPress={() => {}}
-              position={{ top: '$4', right: '$4' }}
+              position={{ top: "$4", right: "$4" }}
             />
 
             {/* Time badge */}
@@ -92,14 +97,14 @@ export default function RecipeDetail() {
         {/* Recipe info section */}
         <VStack space="md" px="$5">
           {/* Title and rating */}
-          <VStack space="xs">
+          <HStack alignItems="center" justifyContent="space-between">
             <Heading size="lg" fontWeight="$bold">
               {recipe.name}
             </Heading>
             <Text fontSize="$sm" color="$coolGray500">
               (15 Ulasan)
             </Text>
-          </VStack>
+          </HStack>
 
           {/* Author info */}
           <HStack space="sm" alignItems="center">
@@ -126,13 +131,18 @@ export default function RecipeDetail() {
               </HStack>
             </VStack>
             <Pressable
-              bg={warnaGlobal.primary}
+              onPress={() => setIsFollowing(!isFollowing)}
+              bg={isFollowing ? warnaGlobal.gray200 : warnaGlobal.primary}
               px="$5"
               py="$2"
               borderRadius="$lg"
             >
-              <Text color={warnaGlobal.white} fontSize="$sm" fontWeight="$semibold">
-                Ikuti
+              <Text
+                color={isFollowing ? warnaGlobal.gray700 : warnaGlobal.white}
+                fontSize="$sm"
+                fontWeight="$semibold"
+              >
+                {isFollowing ? "Diikuti" : "Ikuti"}
               </Text>
             </Pressable>
           </HStack>
@@ -152,7 +162,11 @@ export default function RecipeDetail() {
               alignItems="center"
             >
               <Text
-                color={activeTab === "bahan" ? warnaGlobal.white : warnaGlobal.gray600}
+                color={
+                  activeTab === "bahan"
+                    ? warnaGlobal.white
+                    : warnaGlobal.gray600
+                }
                 fontSize="$sm"
                 fontWeight="$semibold"
               >
@@ -172,7 +186,11 @@ export default function RecipeDetail() {
               alignItems="center"
             >
               <Text
-                color={activeTab === "prosedur" ? warnaGlobal.white : warnaGlobal.gray600}
+                color={
+                  activeTab === "prosedur"
+                    ? warnaGlobal.white
+                    : warnaGlobal.gray600
+                }
                 fontSize="$sm"
                 fontWeight="$semibold"
               >
@@ -229,7 +247,11 @@ export default function RecipeDetail() {
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Text color={warnaGlobal.white} fontSize="$sm" fontWeight="$bold">
+                      <Text
+                        color={warnaGlobal.white}
+                        fontSize="$sm"
+                        fontWeight="$bold"
+                      >
                         {index + 1}
                       </Text>
                     </Box>
