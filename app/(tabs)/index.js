@@ -25,16 +25,16 @@ export default function SyihabTab() {
   ];
 
   return (
-    <Container scrollable bg="$coolGray50">
-      <VStack space="lg" p="$5" pb="$6">
+    <Container scrollable bg="$white" padding="$0">
+      <VStack space="lg">
         {/* Header */}
-        <Card variant="elevated" bg={temaKelompok.syihab.primary} p="$5" mb="$2">
+        <Box bg={temaKelompok.syihab.primary} p="$6" pb="$5">
           <Heading size="2xl" color="$white" mb="$1">Recipe App</Heading>
-          <Text color="$white" opacity={0.9} fontSize="$sm">Temukan resep favoritmu</Text>
-        </Card>
+          <Text color="$white" fontSize="$sm">Temukan resep favoritmu</Text>
+        </Box>
 
         {/* Search Bar */}
-        <Box mb="$2">
+        <Box mb="$2" px="$5">
           <Input size="lg" variant="outline" bg="$white" h="$12">
             <InputSlot pl="$3">
               <InputIcon as={SearchIcon} color="$coolGray400" />
@@ -48,8 +48,9 @@ export default function SyihabTab() {
         </Box>
 
         {/* Categories Section */}
-        <Section title="Kategori Resep" mb="$2">
-          <HStack flexWrap="wrap" gap="$3" justifyContent="space-between">
+        <Box px="$5">
+          <Section title="Kategori Resep" mb="$2">
+            <HStack flexWrap="wrap" gap="$3" justifyContent="space-between">
             {categories.map((category) => (
               <Pressable
                 key={category.id}
@@ -84,9 +85,11 @@ export default function SyihabTab() {
             </Text>
           </Box>
         )}
+        </Box>
 
         {/* Popular Recipes Section */}
-        <Section title="Resep Populer" mb="$2">
+        <Box px="$5">
+          <Section title="Resep Populer" mb="$2">
           <VStack space="md">
             {popularRecipes.map((recipe) => (
               <Card key={recipe.id} variant="outlined" p="$4" bg="$white">
@@ -105,6 +108,7 @@ export default function SyihabTab() {
             ))}
           </VStack>
         </Section>
+        </Box>
       </VStack>
     </Container>
   );

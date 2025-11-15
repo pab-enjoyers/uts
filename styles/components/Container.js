@@ -28,15 +28,13 @@ export const Container = ({
 
   if (scrollable) {
     return (
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <ScrollView
           flex={1}
           bg={bg}
           showsVerticalScrollIndicator={false}
         >
-          <Box p={padding}>
-            {children}
-          </Box>
+          {children}
         </ScrollView>
       </SafeAreaView>
     );
