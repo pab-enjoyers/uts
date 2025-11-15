@@ -47,7 +47,7 @@ export default function SyihabTab() {
 
   return (
     <Container scrollable bg="$white" padding="$0">
-      <VStack space="md" pb="$4">
+      <VStack space="md" pb="$4" mt="$12">
         {/* Header Section */}
         <Box px="$5" pt="$5" pb="$3">
           <HStack justifyContent="space-between" alignItems="center" mb="$4">

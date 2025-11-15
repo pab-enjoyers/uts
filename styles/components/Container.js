@@ -28,7 +28,7 @@ export const Container = ({
 
   if (scrollable) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={[]}>
         <ScrollView
           flex={1}
           bg={bg}
@@ -41,7 +41,7 @@ export const Container = ({
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }} edges={[]}>
       {content}
     </SafeAreaView>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Container, warnaGlobalMerah } from "../../styles";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   VStack,
   HStack,
@@ -20,8 +20,9 @@ export default function RecipeDetail() {
   const [activeTab, setActiveTab] = useState("bahan");
 
   // Ambil data resep sesuai nama atau gunakan default
-  const currentRecipe = recipeDetails[name] || recipeDetails["Classic Greek Salad"];
-  
+  const currentRecipe =
+    recipeDetails[name] || recipeDetails["Classic Greek Salad"];
+
   const recipe = {
     id: id || "1",
     name: name || "Classic Greek Salad",
@@ -35,7 +36,7 @@ export default function RecipeDetail() {
 
   return (
     <Container scrollable bg="$white" padding="$0">
-      <VStack space="md">
+      <VStack space="md" mt="$12">
         {/* Header dengan gambar resep */}
         <Box position="relative">
           {/* Gambar resep full width */}
@@ -47,7 +48,7 @@ export default function RecipeDetail() {
             position="relative"
           >
             <Text fontSize={100}>{recipe.image}</Text>
-            
+
             {/* Back button overlay */}
             <Pressable
               position="absolute"
@@ -62,7 +63,9 @@ export default function RecipeDetail() {
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$lg"><FontAwesome name="long-arrow-left" size={15} color="gray" /></Text>
+              <Text fontSize="$lg">
+                <FontAwesome name="long-arrow-left" size={15} color="gray" />
+              </Text>
             </Pressable>
 
             {/* More options button */}
@@ -78,7 +81,9 @@ export default function RecipeDetail() {
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$lg"><FontAwesome name="ellipsis-h" size={15} color="gray" /></Text>
+              <Text fontSize="$lg">
+                <FontAwesome name="ellipsis-h" size={15} color="gray" />
+              </Text>
             </Pressable>
 
             {/* Time badge */}
@@ -92,8 +97,14 @@ export default function RecipeDetail() {
               py="$2"
             >
               <HStack space="xs" alignItems="center">
-                <Text color={warnaGlobalMerah.primary} fontSize="$xs"><FontAwesome name="clock-o" size={15} color="red" /></Text>
-                <Text color={warnaGlobalMerah.primary} fontSize="$xs" fontWeight="$semibold">
+                <Text color={warnaGlobalMerah.primary} fontSize="$xs">
+                  <FontAwesome name="clock-o" size={15} color="red" />
+                </Text>
+                <Text
+                  color={warnaGlobalMerah.primary}
+                  fontSize="$xs"
+                  fontWeight="$semibold"
+                >
                   {recipe.time}
                 </Text>
               </HStack>
@@ -130,7 +141,9 @@ export default function RecipeDetail() {
                 Fuad Gedhangan
               </Text>
               <HStack space="xs" alignItems="center">
-                <Text color="$amber500" fontSize="$xs">📍</Text>
+                <Text color="$amber500" fontSize="$xs">
+                  📍
+                </Text>
                 <Text fontSize="$xs" color="$coolGray500">
                   Gedhangan Aloha, Malaysia
                 </Text>
@@ -153,7 +166,11 @@ export default function RecipeDetail() {
             <Pressable
               flex={1}
               onPress={() => setActiveTab("bahan")}
-              bg={activeTab === "bahan" ? warnaGlobalMerah.primary : "$coolGray100"}
+              bg={
+                activeTab === "bahan"
+                  ? warnaGlobalMerah.primary
+                  : "$coolGray100"
+              }
               py="$3"
               borderRadius="$lg"
               alignItems="center"
@@ -169,7 +186,11 @@ export default function RecipeDetail() {
             <Pressable
               flex={1}
               onPress={() => setActiveTab("prosedur")}
-              bg={activeTab === "prosedur" ? warnaGlobalMerah.primary : "$coolGray100"}
+              bg={
+                activeTab === "prosedur"
+                  ? warnaGlobalMerah.primary
+                  : "$coolGray100"
+              }
               py="$3"
               borderRadius="$lg"
               alignItems="center"
@@ -236,7 +257,12 @@ export default function RecipeDetail() {
                         {index + 1}
                       </Text>
                     </Box>
-                    <Text flex={1} fontSize="$sm" color="$coolGray700" lineHeight="$lg">
+                    <Text
+                      flex={1}
+                      fontSize="$sm"
+                      color="$coolGray700"
+                      lineHeight="$lg"
+                    >
                       {step}
                     </Text>
                   </HStack>
