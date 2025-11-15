@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Box } from '@gluestack-ui/themed';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, temaKelompok } from '../../styles/theme';
+import { colors, warnaGlobalMerah } from '../../styles/theme';
 
 export default function TabsLayout() {
   return (
@@ -75,7 +75,7 @@ export default function TabsLayout() {
                 borderRadius="$full"
                 alignItems="center"
                 justifyContent="center"
-                bg={focused ? temaKelompok.syihab.primary : temaKelompok.syihab.secondary}
+                bg={focused ? warnaGlobalMerah.primary : warnaGlobalMerah.secondary}
                 shadowColor="$black"
                 shadowOffset={{ width: 0, height: 4 }}
                 shadowOpacity={0.3}

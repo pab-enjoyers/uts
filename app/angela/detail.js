@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Container, temaKelompok } from "../../styles";
+import { Container, warnaGlobalMerah } from "../../styles";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   VStack,
   HStack,
@@ -9,51 +10,17 @@ import {
   Pressable,
 } from "@gluestack-ui/themed";
 import { useLocalSearchParams, router } from "expo-router";
+import { recipeDetails } from "../../data/resep";
 
 export default function RecipeDetail() {
   const params = useLocalSearchParams();
   const { id, name, image, rating, time } = params;
 
   // State untuk tab switcher (Props & State requirement)
-  const [activeTab, setActiveTab] = useState("ingredient");
-
-  // Data dummy resep lengkap
-  const recipeData = {
-    "Spicy chicken burger with French fries": {
-      description: "Burger ayam pedas yang juicy dengan kentang goreng renyah. Cocok untuk makan siang atau makan malam yang mengenyangkan.",
-      ingredients: [
-        { icon: "🍅", name: "Tomatos", amount: "500g" },
-        { icon: "🥬", name: "Cabbage", amount: "300g" },
-        { icon: "🌮", name: "Taco", amount: "300g" },
-        { icon: "🍞", name: "Slice Bread", amount: "300g" },
-      ],
-      steps: [
-        "Lorem Ipsum tempor incididunt ut labore et dolore,in voluptate velit esse cillum dolore eu fugiat nulla pariatur?",
-        "Lorem Ipsum tempor incididunt ut labore et dolore,in voluptate velit esse cillum dolore eu fugiat nulla pariatur?",
-        "Lorem Ipsum tempor incididunt ut labore et dolore,in voluptate velit esse cillum dolore eu fugiat nulla pariatur?",
-      ],
-    },
-    "Classic Greek Salad": {
-      description: "Salad khas Yunani yang segar dengan tomat, timun, paprika, zaitun, dan keju feta.",
-      ingredients: [
-        { icon: "🍅", name: "Tomatos", amount: "500g" },
-        { icon: "🥒", name: "Cucumber", amount: "300g" },
-        { icon: "🧀", name: "Feta Cheese", amount: "100g" },
-        { icon: "🫒", name: "Olives", amount: "150g" },
-      ],
-      steps: [
-        "Siapkan semua sayuran: potong tomat, timun, paprika, dan iris tipis bawang merah.",
-        "Masukkan semua sayuran ke dalam mangkuk besar, tambahkan zaitun hitam.",
-        "Tambahkan potongan keju feta di atas sayuran.",
-        "Dalam mangkuk kecil, campurkan minyak zaitun, air lemon, oregano, garam, dan lada. Aduk rata hingga menjadi dressing.",
-        "Tuang dressing ke atas salad, lalu aduk perlahan agar sayuran tidak hancur.",
-        "Sajikan segera sebagai hidangan pembuka atau pendamping.",
-      ],
-    },
-  };
+  const [activeTab, setActiveTab] = useState("bahan");
 
   // Ambil data resep sesuai nama atau gunakan default
-  const currentRecipe = recipeData[name] || recipeData["Classic Greek Salad"];
+  const currentRecipe = recipeDetails[name] || recipeDetails["Classic Greek Salad"];
   
   const recipe = {
     id: id || "1",
@@ -62,7 +29,7 @@ export default function RecipeDetail() {
     rating: rating || "4.5",
     time: time || "15 Mins",
     description: currentRecipe.description,
-    ingredients: currentRecipe.ingredients,
+    bahans: currentRecipe.bahans,
     steps: currentRecipe.steps,
   };
 
@@ -95,7 +62,7 @@ export default function RecipeDetail() {
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$lg">←</Text>
+              <Text fontSize="$lg"><FontAwesome name="long-arrow-left" size={15} color="gray" /></Text>
             </Pressable>
 
             {/* More options button */}
@@ -111,7 +78,7 @@ export default function RecipeDetail() {
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$lg">⋯</Text>
+              <Text fontSize="$lg"><FontAwesome name="ellipsis-h" size={15} color="gray" /></Text>
             </Pressable>
 
             {/* Time badge */}
@@ -119,14 +86,14 @@ export default function RecipeDetail() {
               position="absolute"
               bottom="$4"
               right="$4"
-              bg="$blackAlpha800"
+              bg={warnaGlobalMerah.light}
               borderRadius="$full"
               px="$3"
               py="$2"
             >
               <HStack space="xs" alignItems="center">
-                <Text color="$white" fontSize="$xs">⏱️</Text>
-                <Text color="$white" fontSize="$xs" fontWeight="$semibold">
+                <Text color={warnaGlobalMerah.primary} fontSize="$xs"><FontAwesome name="clock-o" size={15} color="red" /></Text>
+                <Text color={warnaGlobalMerah.primary} fontSize="$xs" fontWeight="$semibold">
                   {recipe.time}
                 </Text>
               </HStack>
@@ -142,14 +109,14 @@ export default function RecipeDetail() {
               {recipe.name}
             </Heading>
             <Text fontSize="$sm" color="$coolGray500">
-              (15 Reviews)
+              (15 Ulasan)
             </Text>
           </VStack>
 
           {/* Author info */}
           <HStack space="sm" alignItems="center">
             <Box
-              bg={temaKelompok.syihab.light}
+              bg={warnaGlobalMerah.light}
               w={40}
               h={40}
               borderRadius="$full"
@@ -160,68 +127,68 @@ export default function RecipeDetail() {
             </Box>
             <VStack flex={1}>
               <Text fontSize="$sm" fontWeight="$semibold">
-                Laura Wilson
+                Fuad Gedhangan
               </Text>
               <HStack space="xs" alignItems="center">
                 <Text color="$amber500" fontSize="$xs">📍</Text>
                 <Text fontSize="$xs" color="$coolGray500">
-                  Kuala Lumpur, Malaysia
+                  Gedhangan Aloha, Malaysia
                 </Text>
               </HStack>
             </VStack>
             <Pressable
-              bg={temaKelompok.syihab.primary}
+              bg={warnaGlobalMerah.primary}
               px="$5"
               py="$2"
               borderRadius="$lg"
             >
               <Text color="$white" fontSize="$sm" fontWeight="$semibold">
-                Follow
+                Ikuti
               </Text>
             </Pressable>
           </HStack>
 
-          {/* Tab Switcher - Ingredient / Procedure */}
+          {/* Tab Switcher - Bahan / Prosedur */}
           <HStack space="md" mt="$2">
             <Pressable
               flex={1}
-              onPress={() => setActiveTab("ingredient")}
-              bg={activeTab === "ingredient" ? temaKelompok.syihab.primary : "$coolGray100"}
+              onPress={() => setActiveTab("bahan")}
+              bg={activeTab === "bahan" ? warnaGlobalMerah.primary : "$coolGray100"}
               py="$3"
               borderRadius="$lg"
               alignItems="center"
             >
               <Text
-                color={activeTab === "ingredient" ? "$white" : "$coolGray600"}
+                color={activeTab === "bahan" ? "$white" : "$coolGray600"}
                 fontSize="$sm"
                 fontWeight="$semibold"
               >
-                Ingredient
+                Bahan
               </Text>
             </Pressable>
             <Pressable
               flex={1}
-              onPress={() => setActiveTab("procedure")}
-              bg={activeTab === "procedure" ? temaKelompok.syihab.primary : "$coolGray100"}
+              onPress={() => setActiveTab("prosedur")}
+              bg={activeTab === "prosedur" ? warnaGlobalMerah.primary : "$coolGray100"}
               py="$3"
               borderRadius="$lg"
               alignItems="center"
             >
               <Text
-                color={activeTab === "procedure" ? "$white" : "$coolGray600"}
+                color={activeTab === "prosedur" ? "$white" : "$coolGray600"}
                 fontSize="$sm"
                 fontWeight="$semibold"
               >
-                Procedure
+                Prosedur
               </Text>
             </Pressable>
           </HStack>
 
           {/* Content based on active tab */}
-          {activeTab === "ingredient" ? (
-            // Ingredient List View
+          {activeTab === "bahan" ? (
+            // Bahan List View
             <VStack space="sm" mt="$4" pb="$6">
-              {recipe.ingredients.map((item, index) => (
+              {recipe.bahans.map((item, index) => (
                 <HStack
                   key={index}
                   space="md"
@@ -252,13 +219,13 @@ export default function RecipeDetail() {
               ))}
             </VStack>
           ) : (
-            // Procedure Steps View
+            // Prosedur Steps View
             <VStack space="md" mt="$4" pb="$6">
               {recipe.steps.map((step, index) => (
                 <VStack key={index} space="sm">
                   <HStack space="sm" alignItems="flex-start">
                     <Box
-                      bg={temaKelompok.syihab.primary}
+                      bg={warnaGlobalMerah.primary}
                       w={28}
                       h={28}
                       borderRadius="$full"

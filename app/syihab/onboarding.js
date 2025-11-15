@@ -10,8 +10,7 @@ import {
   ButtonText,
   Pressable
 } from '@gluestack-ui/themed';
-import { Container } from '../../styles';
-import { temaKelompok, spacing } from '../../styles/theme';
+import { Container, warnaGlobalMerah, spacing } from '../../styles';
 
 export default function OnboardingScreen() {
   // slides data dan current slide  1C)
@@ -61,7 +60,7 @@ export default function OnboardingScreen() {
           <Pressable onPress={handleSkip} p="$2">
             <Text 
               size="md" 
-              color={temaKelompok.syihab.primary}
+              color={warnaGlobalMerah.primary}
               fontWeight="$semibold"
             >
               Lewati →
@@ -79,7 +78,7 @@ export default function OnboardingScreen() {
           {/* Title */}
           <Heading 
             size="2xl" 
-            color={temaKelompok.syihab.primary}
+            color={warnaGlobalMerah.primary}
             textAlign="center"
             mb="$3"
           >
@@ -108,7 +107,7 @@ export default function OnboardingScreen() {
                 w={currentSlide === index ? 28 : 8}
                 h={8}
                 borderRadius="$full"
-                bg={currentSlide === index ? temaKelompok.syihab.primary : '$coolGray300'}
+                bg={currentSlide === index ? warnaGlobalMerah.primary : '$coolGray300'}
               />
             ))}
           </HStack>
@@ -116,7 +115,7 @@ export default function OnboardingScreen() {
           {/* Next/Finish Button */}
           <Button
             size="lg"
-            bg={temaKelompok.syihab.primary}
+            bg={warnaGlobalMerah.primary}
             onPress={handleNext}
             h="$12"
             borderRadius="$lg"

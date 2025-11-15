@@ -5,15 +5,9 @@
 // ========================================
 
 export const colors = {
-  // Brand Colors - Warna identitas setiap member tim
-  syihab: '$red500',
-  angela: '$cyan500',
-  deru: '$blue500',
-  najma: '$orange500',
-  
   // Navigation Colors
-  tabActive: '#EF4444',      // Warna tab yang aktif
-  tabInactive: '#9CA3AF',    // Warna tab yang tidak aktif
+  tabActive: '#EF4444',      // Warna tab yang aktif (Merah)
+  tabInactive: '#9CA3AF',    // Warna tab yang tidak aktif (Abu)
   
   // UI Colors - Warna umum untuk komponen
   primary: '$primary500',         // Indigo/Purple
@@ -139,33 +133,13 @@ export const typography = {
   small: { size: 'xs', fontWeight: '$normal' },
 };
 
-// Tema Kelompok - Konfigurasi warna untuk setiap anggota
-// Setiap member punya warna unik untuk personalisasi screen
-export const temaKelompok = {
-  syihab: {
-    primary: '$red500',
-    secondary: '$red300',
-    accent: '$red700',
-    light: '$red100',
-  },
-  angela: {
-    primary: '$cyan500',
-    secondary: '$cyan300',
-    accent: '$cyan700',
-    light: '$cyan100',
-  },
-  deru: {
-    primary: '$blue500',
-    secondary: '$blue300',
-    accent: '$blue700',
-    light: '$blue100',
-  },
-  najma: {
-    primary: '$orange500',
-    secondary: '$orange300',
-    accent: '$orange700',
-    light: '$orange100',
-  },
+// Warna Global Merah - Digunakan di semua screen untuk konsistensi
+// Warna merah sebagai brand color utama aplikasi
+export const warnaGlobalMerah = {
+  primary: '$red500',      // Merah utama
+  secondary: '$red300',    // Merah muda
+  accent: '$red700',       // Merah gelap
+  light: '$red100',        // Merah sangat muda (untuk background)
 };
 
 export default {
@@ -177,5 +151,5 @@ export default {
   cardStyles,
   borderRadius,
   typography,
-  temaKelompok,
+  warnaGlobalMerah,
 };

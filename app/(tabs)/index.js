@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { ScrollView as RNScrollView } from "react-native";
-import { Container, temaKelompok } from "../../styles";
+import { Container, warnaGlobalMerah } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
-
+import { categories, featuredRecipes, popularRecipes } from "../../data/resep";
 
 import {
   VStack,
@@ -28,140 +28,7 @@ export default function SyihabTab() {
   // State management (Props & State - Syarat C)
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-
-  // Data dummy - Categories
-  const categories = [
-    { id: 1, name: "All" },
-    { id: 2, name: "Indian" },
-    { id: 3, name: "Italian" },
-    { id: 4, name: "Asian" },
-    { id: 5, name: "Chinese" },
-  ];
-
-  // Data dummy - Featured Recipes (Horizontal Slider)
-  const featuredRecipes = [
-    {
-      id: 1,
-      name: "Classic Greek Salad",
-      image: "🥗",
-      rating: 4.5,
-      time: "15 Mins",
-      bgColor: "$coolGray100",
-      category: "Italian",
-    },
-    {
-      id: 2,
-      name: "Crunchy Nut Coleslaw",
-      image: "🥙",
-      rating: 3.5,
-      time: "10 Mins",
-      bgColor: "$warmGray100",
-      category: "Asian",
-    },
-    {
-      id: 3,
-      name: "Sushi Roll Special",
-      image: "🍣",
-      rating: 4.8,
-      time: "25 Mins",
-      bgColor: "$red50",
-      category: "Asian",
-    },
-    {
-      id: 4,
-      name: "Spicy Ramen Bowl",
-      image: "🍜",
-      rating: 4.2,
-      time: "20 Mins",
-      bgColor: "$orange50",
-      category: "Asian",
-    },
-    {
-      id: 5,
-      name: "Butter Chicken Curry",
-      image: "🍛",
-      rating: 4.7,
-      time: "30 Mins",
-      bgColor: "$yellow50",
-      category: "Indian",
-    },
-    {
-      id: 6,
-      name: "Kung Pao Chicken",
-      image: "🥘",
-      rating: 4.3,
-      time: "25 Mins",
-      bgColor: "$orange100",
-      category: "Chinese",
-    },
-  ];
-
-  // Data dummy - Popular Recipes (Vertical List - 5 items)
-  const popularRecipes = [
-    {
-      id: 1,
-      name: "Steak with tomato sauce",
-      author: "By James Milner",
-      rating: 5,
-      time: "20 mins",
-      image: "🥩",
-      category: "Italian",
-    },
-    {
-      id: 2,
-      name: "Pilaf sweet with chicken",
-      author: "By Laura Wilson",
-      rating: 4,
-      time: "30 mins",
-      image: "🍚",
-      category: "Asian",
-    },
-    {
-      id: 3,
-      name: "Grilled Salmon Teriyaki",
-      author: "By Mike Chen",
-      rating: 5,
-      time: "25 mins",
-      image: "🐟",
-      category: "Asian",
-    },
-    {
-      id: 4,
-      name: "Pasta Carbonara Classic",
-      author: "By Sofia Romano",
-      rating: 4,
-      time: "15 mins",
-      image: "🍝",
-      category: "Italian",
-    },
-    {
-      id: 5,
-      name: "Korean BBQ Tacos",
-      author: "By David Kim",
-      rating: 5,
-      time: "35 mins",
-      image: "🌮",
-      category: "Asian",
-    },
-    {
-      id: 6,
-      name: "Tandoori Chicken",
-      author: "By Raj Patel",
-      rating: 5,
-      time: "40 mins",
-      image: "🍗",
-      category: "Indian",
-    },
-    {
-      id: 7,
-      name: "Sweet and Sour Pork",
-      author: "By Li Wei",
-      rating: 4,
-      time: "30 mins",
-      image: "🍖",
-      category: "Chinese",
-    },
-  ];
+  const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
 
   // Filter recipes based on selected category
   const filteredFeaturedRecipes =
@@ -186,15 +53,17 @@ export default function SyihabTab() {
           <HStack justifyContent="space-between" alignItems="center" mb="$4">
             <VStack>
               <Heading size="xl" fontWeight="$bold">
-                Halo Fuad
+                Halo Fuad Gedhangan
               </Heading>
               <Text size="sm" color="$coolGray500">
                 Mau masak apa hari ini?
               </Text>
             </VStack>
-            <Avatar size="md" bg={temaKelompok.syihab.light}>
+            <Avatar size="md" bg={warnaGlobalMerah.light}>
               {/* iki icon gawe icon profile */}
-              <Text fontSize="$xl"><FontAwesome name="user" size={24} color="white" /></Text> 
+              <Text fontSize="$xl">
+                <FontAwesome name="user" size={24} color="white" />
+              </Text>
             </Avatar>
           </HStack>
 
@@ -219,7 +88,7 @@ export default function SyihabTab() {
             </Box>
             <Pressable>
               <Box
-                bg={temaKelompok.syihab.primary}
+                bg={warnaGlobalMerah.primary}
                 p="$3"
                 borderRadius="$xl"
                 w={48}
@@ -253,7 +122,7 @@ export default function SyihabTab() {
                   <Box
                     bg={
                       selectedCategory === category.name
-                        ? temaKelompok.syihab.primary
+                        ? warnaGlobalMerah.primary
                         : "$coolGray100"
                     }
                     px="$5"
@@ -287,18 +156,25 @@ export default function SyihabTab() {
           >
             <HStack space="md">
               {filteredFeaturedRecipes.map((recipe) => (
-                <Pressable 
+                <Pressable
                   key={recipe.id}
-                  onPress={() => router.push({
-                    pathname: "/angela/detail",
-                    params: {
-                      id: recipe.id,
-                      name: recipe.name,
-                      image: recipe.image,
-                      rating: recipe.rating,
-                      time: recipe.time,
-                    }
-                  })}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/angela/detail",
+                      params: {
+                        id: recipe.id,
+                        name: recipe.name,
+                        image: recipe.image,
+                        rating: recipe.rating,
+                        time: recipe.time,
+                      },
+                    })
+                  }
+                  sx={{
+                    ":active": {
+                      transform: [{ scale: 0.95 }],
+                    },
+                  }}
                 >
                   <Box
                     w={170}
@@ -307,6 +183,11 @@ export default function SyihabTab() {
                     borderRadius="$2xl"
                     p="$4"
                     position="relative"
+                    sx={{
+                      ":active": {
+                        opacity: 0.8,
+                      },
+                    }}
                   >
                     {/* Recipe Image/Icon */}
                     <Box alignItems="center" mb="$3" mt="$2">
@@ -331,13 +212,56 @@ export default function SyihabTab() {
                       </Badge>
                     </Box>
 
+                    {/* Bookmark Icon */}
+                    <Pressable
+                      position="absolute"
+                      bottom="$4"
+                      right="$4"
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setBookmarkedRecipes((prev) =>
+                          prev.includes(recipe.id)
+                            ? prev.filter((id) => id !== recipe.id)
+                            : [...prev, recipe.id]
+                        );
+                      }}
+                    >
+                      <Box
+                        bg={
+                          bookmarkedRecipes.includes(recipe.id)
+                            ? warnaGlobalMerah.light
+                            : "$white"
+                        }
+                        p="$2"
+                        borderRadius="$lg"
+                        shadowColor="$black"
+                        shadowOffset={{ width: 0, height: 2 }}
+                        shadowOpacity={0.1}
+                        shadowRadius={4}
+                      >
+                        <FontAwesome
+                          name={
+                            bookmarkedRecipes.includes(recipe.id)
+                              ? "bookmark"
+                              : "bookmark-o"
+                          }
+                          size={13}
+                          color={
+                            bookmarkedRecipes.includes(recipe.id)
+                              ? "#dc2626"
+                              : "#6b7280"
+                          }
+                        />
+                      </Box>
+                    </Pressable>
+
                     {/* Recipe Info */}
                     <VStack
                       space="xs"
                       position="absolute"
                       bottom="$4"
                       left="$4"
-                      right="$4"
+                      right="$12"
                     >
                       <Text
                         fontSize="$sm"
@@ -368,7 +292,7 @@ export default function SyihabTab() {
             {selectedCategory !== "All" && (
               <Text
                 fontSize="$sm"
-                color={temaKelompok.syihab.primary}
+                color={warnaGlobalMerah.primary}
                 fontWeight="$normal"
               >
                 {" "}
@@ -380,18 +304,25 @@ export default function SyihabTab() {
           <VStack space="md">
             {filteredPopularRecipes.length > 0 ? (
               filteredPopularRecipes.map((recipe) => (
-                <Pressable 
+                <Pressable
                   key={recipe.id}
-                  onPress={() => router.push({
-                    pathname: "/angela/detail",
-                    params: {
-                      id: recipe.id,
-                      name: recipe.name,
-                      image: recipe.image,
-                      rating: recipe.rating,
-                      time: recipe.time,
-                    }
-                  })}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/angela/detail",
+                      params: {
+                        id: recipe.id,
+                        name: recipe.name,
+                        image: recipe.image,
+                        rating: recipe.rating,
+                        time: recipe.time,
+                      },
+                    })
+                  }
+                  sx={{
+                    ":active": {
+                      transform: [{ scale: 0.98 }],
+                    },
+                  }}
                 >
                   {/* Recipe Card */}
                   <HStack
@@ -400,6 +331,11 @@ export default function SyihabTab() {
                     borderRadius="$xl"
                     p="$3"
                     alignItems="center"
+                    sx={{
+                      ":active": {
+                        bg: "$coolGray100",
+                      },
+                    }}
                   >
                     {/* Recipe Image */}
                     <Box
@@ -418,20 +354,21 @@ export default function SyihabTab() {
                       <Text fontSize="$sm" fontWeight="$bold" numberOfLines={1}>
                         {recipe.name}
                       </Text>
-                      <HStack space="2px">
+                      <HStack space="xs" alignItems="center">
                         {[...Array(5)].map((_, i) => (
-                          <Text key={i} fontSize="$xs" color="$amber500">
-                            {i < recipe.rating ? "⭐" : "☆"}
-                          </Text>
+                          <FontAwesome
+                            key={i}
+                            name={i < recipe.rating ? "star" : "star-o"}
+                            size={14}
+                            color="#f59e0b"
+                          />
                         ))}
                       </HStack>
                       <Text fontSize="$xs" color="$coolGray500">
                         {recipe.author}
                       </Text>
                       <HStack space="xs" alignItems="center">
-                        <Text fontSize="$xs" color="$coolGray600">
-                          ⏱️
-                        </Text>
+                        <FontAwesome name="clock-o" size={13} color="#6b7280" />
                         <Text fontSize="$xs" color="$coolGray600">
                           {recipe.time}
                         </Text>

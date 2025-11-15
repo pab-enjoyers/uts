@@ -7,8 +7,7 @@ import {
   Heading,
   Spinner,
 } from "@gluestack-ui/themed";
-import { Container } from "../../styles";
-import { temaKelompok, spacing } from "../../styles/theme";
+import { Container, warnaGlobalMerah, spacing } from "../../styles";
 
 export default function SplashScreen() {
   // iki loading state (Props & State)
@@ -26,7 +25,7 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <Container bg={temaKelompok.syihab.light}>
+    <Container bg={warnaGlobalMerah.light}>
       <VStack 
         flex={1} 
         justifyContent="center" 
@@ -36,7 +35,7 @@ export default function SplashScreen() {
       >
         {/* Logo/Icon */}
         <Box
-          bg={temaKelompok.syihab.primary}
+          bg={warnaGlobalMerah.primary}
           p="$8"
           borderRadius="$full"
           w={140}
@@ -55,14 +54,14 @@ export default function SplashScreen() {
         <VStack space="xs" alignItems="center" mt="$4">
           <Heading 
             size="3xl" 
-            color={temaKelompok.syihab.primary}
+            color={warnaGlobalMerah.primary}
             fontWeight="$bold"
           >
             Resep App
           </Heading>
           <Text 
             size="md" 
-            color={temaKelompok.syihab.accent}
+            color={warnaGlobalMerah.accent}
             fontWeight="$medium"
           >
             Kelompok 67
@@ -72,10 +71,10 @@ export default function SplashScreen() {
         {/* Loading Indicator */}
         {loading && (
           <VStack space="sm" alignItems="center" mt="$8">
-            <Spinner size="large" color={temaKelompok.syihab.primary} />
+            <Spinner size="large" color={warnaGlobalMerah.primary} />
             <Text 
               size="sm" 
-              color={temaKelompok.syihab.accent}
+              color={warnaGlobalMerah.accent}
               mt="$2"
             >
               Loading...
