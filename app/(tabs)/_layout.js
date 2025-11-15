@@ -13,7 +13,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.tabActive,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          position: 'absolute',
+          position: "absolute",
           height: Platform.OS === "ios" ? 85 : 70,
           paddingBottom: Platform.OS === "ios" ? 25 : 10,
           paddingTop: 10,
@@ -32,14 +32,19 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="artikel"
+        name="artikel-tab"
         options={{
           title: "Artikel",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
             <Box alignItems="center" gap="$1">
               {focused && (
-                <Box w={40} h={3} bg={warnaGlobal.primary} borderRadius="$full" />
+                <Box
+                  w={40}
+                  h={3}
+                  bg={warnaGlobal.primary}
+                  borderRadius="$full"
+                />
               )}
               <Ionicons
                 name={focused ? "newspaper" : "newspaper-outline"}
@@ -51,14 +56,19 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="bookmark"
+        name="bookmark-tab"
         options={{
           title: "Disimpan",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
             <Box alignItems="center" gap="$1">
               {focused && (
-                <Box w={40} h={3} bg={warnaGlobal.primary} borderRadius="$full" />
+                <Box
+                  w={40}
+                  h={3}
+                  bg={warnaGlobal.primary}
+                  borderRadius="$full"
+                />
               )}
               <Ionicons
                 name={focused ? "bookmark" : "bookmark-outline"}
@@ -71,6 +81,7 @@ export default function TabsLayout() {
       />
 
       {/* Center Home Button */}
+      {/* iki gawe resep */}
       <Tabs.Screen
         name="index"
         options={{
@@ -110,15 +121,21 @@ export default function TabsLayout() {
         }}
       />
 
+      {/* iki gawe notifikasi */}
       <Tabs.Screen
-        name="notifikasi"
+        name="notifikasi-tab"
         options={{
           title: "Notifikasi",
-          headerShown: true,
+          headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Box alignItems="center" gap="$1">
               {focused && (
-                <Box w={40} h={3} bg={warnaGlobal.primary} borderRadius="$full" />
+                <Box
+                  w={40}
+                  h={3}
+                  bg={warnaGlobal.primary}
+                  borderRadius="$full"
+                />
               )}
               <Ionicons
                 name={focused ? "notifications" : "notifications-outline"}
@@ -130,14 +147,19 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile-tab"
         options={{
           title: "Profile",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
             <Box alignItems="center" gap="$1">
               {focused && (
-                <Box w={40} h={3} bg={warnaGlobal.primary} borderRadius="$full" />
+                <Box
+                  w={40}
+                  h={3}
+                  bg={warnaGlobal.primary}
+                  borderRadius="$full"
+                />
               )}
               <Ionicons
                 name={focused ? "person-circle" : "person-circle-outline"}

@@ -26,7 +26,7 @@ import {
   SearchIcon,
 } from "@gluestack-ui/themed";
 
-export default function HomePage() {
+export default function SyihabTab() {
   // State management (Props & State - Syarat C)
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -62,6 +62,7 @@ export default function HomePage() {
               </Text>
             </VStack>
             <Avatar size="md" bg={warnaGlobal.light}>
+              {/* iki icon gawe icon profile */}
               <Text fontSize="$xl">
                 <Ionicons name="person" size={24} color="white" />
               </Text>
@@ -97,7 +98,11 @@ export default function HomePage() {
                 justifyContent="center"
                 alignItems="center"
               >
-                <Ionicons name="filter-outline" size={24} color="white" />
+                <Text color="$white" fontSize="$lg">
+                  {/* <Ionicons name="filter" size={24} color="white" /> */}
+                  {/* iki gawe icon filter sebelah search bar */}
+                  <Ionicons name="filter-outline" size={24} color="white" />
+                </Text>
               </Box>
             </Pressable>
           </HStack>

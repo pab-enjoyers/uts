@@ -18,4 +18,4 @@ export * from './components/RecipeCard';
 export * from './components/RecipeListItem';
 export * from './components/CategoryChip';
 export * from './components/IconButton';
-export * from './components/NotificationCard';
+export * from './components/NotifikasiCard';

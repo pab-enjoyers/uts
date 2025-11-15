@@ -12,6 +12,7 @@ export default function RootLayout() {
         <Stack.Screen name="syihab/onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="angela/detail" options={{ headerShown: false }} />
+        {/* <Stack.Screen name="angela/notifikasi" options={{ headerShown: false }} /> */}
       </Stack>
     </GluestackUIProvider>
   );
