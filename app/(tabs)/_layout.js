@@ -13,12 +13,17 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.tabActive,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
+          position: 'absolute',
           height: Platform.OS === "ios" ? 85 : 70,
           paddingBottom: Platform.OS === "ios" ? 25 : 10,
           paddingTop: 10,
           backgroundColor: "#FFFFFF",
-          borderTopWidth: 1,
-          borderTopColor: "#E5E7EB",
+          borderTopWidth: 0,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 5,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -32,11 +37,16 @@ export default function TabsLayout() {
           title: "Artikel",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "newspaper" : "newspaper-outline"}
-              size={22}
-              color={color}
-            />
+            <Box alignItems="center" gap="$1">
+              {focused && (
+                <Box w={40} h={3} bg={warnaGlobal.primary} borderRadius="$full" />
+              )}
+              <Ionicons
+                name={focused ? "newspaper" : "newspaper-outline"}
+                size={22}
+                color={color}
+              />
+            </Box>
           ),
         }}
       />
@@ -46,16 +56,21 @@ export default function TabsLayout() {
           title: "Disimpan",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "bookmark" : "bookmark-outline"}
-              size={22}
-              color={color}
-            />
+            <Box alignItems="center" gap="$1">
+              {focused && (
+                <Box w={40} h={3} bg={warnaGlobal.primary} borderRadius="$full" />
+              )}
+              <Ionicons
+                name={focused ? "bookmark" : "bookmark-outline"}
+                size={22}
+                color={color}
+              />
+            </Box>
           ),
         }}
       />
 
-      {/* Center Home Button with Floating Circle */}
+      {/* Center Home Button */}
       <Tabs.Screen
         name="index"
         options={{
@@ -64,35 +79,28 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => (
             <Box
               position="absolute"
-              top={-30}
+              top={-35}
               alignItems="center"
               justifyContent="center"
               w={70}
               h={70}
             >
               <Box
-                w={65}
-                h={65}
+                w={60}
+                h={60}
                 borderRadius="$full"
                 alignItems="center"
                 justifyContent="center"
-                bg={
-                  focused
-                    ? warnaGlobal.primary
-                    : warnaGlobal.secondary
-                }
+                bg={warnaGlobal.primary}
                 shadowColor="$black"
                 shadowOffset={{ width: 0, height: 4 }}
-                shadowOpacity={0.3}
-                shadowRadius={8}
-                elevation={10}
-                borderWidth={5}
-                borderColor="$white"
-                transform={[{ scale: focused ? 1.05 : 1 }]}
+                shadowOpacity={0.2}
+                shadowRadius={6}
+                elevation={8}
               >
                 <Ionicons
                   name={focused ? "book" : "book-outline"}
-                  size={30}
+                  size={28}
                   color="white"
                 />
               </Box>
@@ -108,25 +116,35 @@ export default function TabsLayout() {
           title: "Notifikasi",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "notifications" : "notifications-outline"}
-              size={22}
-              color={color}
-            />
+            <Box alignItems="center" gap="$1">
+              {focused && (
+                <Box w={40} h={3} bg={warnaGlobal.primary} borderRadius="$full" />
+              )}
+              <Ionicons
+                name={focused ? "notifications" : "notifications-outline"}
+                size={22}
+                color={color}
+              />
+            </Box>
           ),
         }}
       />
       <Tabs.Screen
-        name="pengaturan-tab"
+        name="profile"
         options={{
-          title: "Pengaturan",
+          title: "Profile",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "person-circle" : "person-circle-outline"}
-              size={22}
-              color={color}
-            />
+            <Box alignItems="center" gap="$1">
+              {focused && (
+                <Box w={40} h={3} bg={warnaGlobal.primary} borderRadius="$full" />
+              )}
+              <Ionicons
+                name={focused ? "person-circle" : "person-circle-outline"}
+                size={24}
+                color={color}
+              />
+            </Box>
           ),
         }}
       />

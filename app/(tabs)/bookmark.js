@@ -5,8 +5,8 @@ export default function DeruTab() {
   return (
     <Box flex={1} bg="$white" p="$5">
       <VStack space="lg">
-        <Heading size="2xl" color="$blue500">Deru Section</Heading>
-        <Text>TODO: Copy dari folder syihab dan sesuaikan</Text>
+        <Heading size="2xl" color="$blue500">Najma Punya</Heading>
+        <Text>ini najma</Text>
       </VStack>
     </Box>
   );
