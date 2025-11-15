@@ -1,9 +1,10 @@
-import React from 'react';
-import { Platform } from 'react-native';
-import { Tabs } from 'expo-router';
-import { Box } from '@gluestack-ui/themed';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, warnaGlobalMerah } from '../../styles/theme';
+import React from "react";
+import { Platform } from "react-native";
+import { Tabs } from "expo-router";
+import { Box } from "@gluestack-ui/themed";
+// import { FontAwesome } from "@expo/vector-icons/FontAwesome";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, warnaGlobal } from "../../styles/theme";
 
 export default function TabsLayout() {
   return (
@@ -12,59 +13,59 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.tabActive,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          height: Platform.OS === 'ios' ? 85 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+          height: Platform.OS === "ios" ? 85 : 70,
+          paddingBottom: Platform.OS === "ios" ? 25 : 10,
           paddingTop: 10,
-          backgroundColor: '#FFFFFF',
+          backgroundColor: "#FFFFFF",
           borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
+          borderTopColor: "#E5E7EB",
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontWeight: "600",
         },
       }}
     >
-      <Tabs.Screen 
-        name="angela-tab" 
-        options={{ 
-          title: 'Angela',
+      <Tabs.Screen
+        name="artikel"
+        options={{
+          title: "Artikel",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "person" : "person-outline"} 
-              size={22} 
-              color={color} 
+            <Ionicons
+              name={focused ? "newspaper" : "newspaper-outline"}
+              size={22}
+              color={color}
             />
           ),
-        }} 
+        }}
       />
-      <Tabs.Screen 
-        name="deru-tab" 
-        options={{ 
-          title: 'Deru',
+      <Tabs.Screen
+        name="bookmark"
+        options={{
+          title: "Disimpan",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "book" : "book-outline"} 
-              size={22} 
-              color={color} 
+            <Ionicons
+              name={focused ? "bookmark" : "bookmark-outline"}
+              size={22}
+              color={color}
             />
           ),
-        }} 
+        }}
       />
-      
+
       {/* Center Home Button with Floating Circle */}
-      <Tabs.Screen 
-        name="index" 
-        options={{ 
-          title: '',
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <Box 
-              position="absolute" 
+            <Box
+              position="absolute"
               top={-30}
-              alignItems="center" 
+              alignItems="center"
               justifyContent="center"
               w={70}
               h={70}
@@ -75,7 +76,11 @@ export default function TabsLayout() {
                 borderRadius="$full"
                 alignItems="center"
                 justifyContent="center"
-                bg={focused ? warnaGlobalMerah.primary : warnaGlobalMerah.secondary}
+                bg={
+                  focused
+                    ? warnaGlobal.primary
+                    : warnaGlobal.secondary
+                }
                 shadowColor="$black"
                 shadowOffset={{ width: 0, height: 4 }}
                 shadowOpacity={0.3}
@@ -85,45 +90,45 @@ export default function TabsLayout() {
                 borderColor="$white"
                 transform={[{ scale: focused ? 1.05 : 1 }]}
               >
-                <Ionicons 
-                  name={focused ? "home" : "home-outline"}
-                  size={30} 
+                <Ionicons
+                  name={focused ? "book" : "book-outline"}
+                  size={30}
                   color="white"
                 />
               </Box>
             </Box>
           ),
           tabBarLabel: () => null,
-        }} 
+        }}
       />
-      
-      <Tabs.Screen 
-        name="najma-tab" 
-        options={{ 
-          title: 'Najma',
+
+      <Tabs.Screen
+        name="notifikasi"
+        options={{
+          title: "Notifikasi",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "restaurant" : "restaurant-outline"} 
-              size={22} 
-              color={color} 
+            <Ionicons
+              name={focused ? "notifications" : "notifications-outline"}
+              size={22}
+              color={color}
             />
           ),
-        }} 
+        }}
       />
-      <Tabs.Screen 
-        name="pengaturan-tab" 
-        options={{ 
-          title: 'Pengaturan',
+      <Tabs.Screen
+        name="pengaturan-tab"
+        options={{
+          title: "Pengaturan",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "settings" : "settings-outline"} 
-              size={22} 
-              color={color} 
+            <Ionicons
+              name={focused ? "person-circle" : "person-circle-outline"}
+              size={22}
+              color={color}
             />
           ),
-        }} 
+        }}
       />
     </Tabs>
   );

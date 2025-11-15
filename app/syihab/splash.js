@@ -7,7 +7,7 @@ import {
   Heading,
   Spinner,
 } from "@gluestack-ui/themed";
-import { Container, warnaGlobalMerah, spacing } from "../../styles";
+import { Container, warnaGlobal, spacing } from "../../styles";
 
 export default function SplashScreen() {
   // iki loading state (Props & State)
@@ -25,7 +25,7 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <Container bg={warnaGlobalMerah.light}>
+    <Container bg={warnaGlobal.light}>
       <VStack 
         flex={1} 
         justifyContent="center" 
@@ -35,7 +35,7 @@ export default function SplashScreen() {
       >
         {/* Logo/Icon */}
         <Box
-          bg={warnaGlobalMerah.primary}
+          bg={warnaGlobal.primary}
           p="$8"
           borderRadius="$full"
           w={140}
@@ -54,14 +54,14 @@ export default function SplashScreen() {
         <VStack space="xs" alignItems="center" mt="$4">
           <Heading 
             size="3xl" 
-            color={warnaGlobalMerah.primary}
+            color={warnaGlobal.primary}
             fontWeight="$bold"
           >
             Resep App
           </Heading>
           <Text 
             size="md" 
-            color={warnaGlobalMerah.accent}
+            color={warnaGlobal.accent}
             fontWeight="$medium"
           >
             Kelompok 67
@@ -71,10 +71,10 @@ export default function SplashScreen() {
         {/* Loading Indicator */}
         {loading && (
           <VStack space="sm" alignItems="center" mt="$8">
-            <Spinner size="large" color={warnaGlobalMerah.primary} />
+            <Spinner size="large" color={warnaGlobal.primary} />
             <Text 
               size="sm" 
-              color={warnaGlobalMerah.accent}
+              color={warnaGlobal.accent}
               mt="$2"
             >
               Loading...

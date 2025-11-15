@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Container, warnaGlobalMerah } from "../../styles";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Container, warnaGlobal, IconButton } from "../../styles";
+import { Ionicons } from "@expo/vector-icons";
 import {
   VStack,
   HStack,
   Box,
   Heading,
   Text,
-  Pressable,
+  Pressable
 } from "@gluestack-ui/themed";
 import { useLocalSearchParams, router } from "expo-router";
 import { recipeDetails } from "../../data/resep";
@@ -41,7 +41,7 @@ export default function RecipeDetail() {
         <Box position="relative">
           {/* Gambar resep full width */}
           <Box
-            bg="$coolGray100"
+            bg={warnaGlobal.gray100}
             h={250}
             justifyContent="center"
             alignItems="center"
@@ -50,58 +50,35 @@ export default function RecipeDetail() {
             <Text fontSize={100}>{recipe.image}</Text>
 
             {/* Back button overlay */}
-            <Pressable
-              position="absolute"
-              top="$4"
-              left="$4"
+            <IconButton
+              icon={<Ionicons name="arrow-back-outline" size={20} color="gray" />}
               onPress={() => router.back()}
-              bg="$white"
-              borderRadius="$full"
-              p="$2"
-              w={40}
-              h={40}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Text fontSize="$lg">
-                <FontAwesome name="long-arrow-left" size={15} color="gray" />
-              </Text>
-            </Pressable>
+              position={{ top: '$4', left: '$4' }}
+            />
 
             {/* More options button */}
-            <Pressable
-              position="absolute"
-              top="$4"
-              right="$4"
-              bg="$white"
-              borderRadius="$full"
-              p="$2"
-              w={40}
-              h={40}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Text fontSize="$lg">
-                <FontAwesome name="ellipsis-h" size={15} color="gray" />
-              </Text>
-            </Pressable>
+            <IconButton
+              icon={<Ionicons name="ellipsis-horizontal" size={20} color="gray" />}
+              onPress={() => {}}
+              position={{ top: '$4', right: '$4' }}
+            />
 
             {/* Time badge */}
             <Box
               position="absolute"
               bottom="$4"
               right="$4"
-              bg={warnaGlobalMerah.light}
+              bg={warnaGlobal.light}
               borderRadius="$full"
               px="$3"
               py="$2"
             >
               <HStack space="xs" alignItems="center">
-                <Text color={warnaGlobalMerah.primary} fontSize="$xs">
-                  <FontAwesome name="clock-o" size={15} color="red" />
+                <Text color={warnaGlobal.primary} fontSize="$xs">
+                  <Ionicons name="timer-outline" size={15} color="red" />
                 </Text>
                 <Text
-                  color={warnaGlobalMerah.primary}
+                  color={warnaGlobal.primary}
                   fontSize="$xs"
                   fontWeight="$semibold"
                 >
@@ -127,7 +104,7 @@ export default function RecipeDetail() {
           {/* Author info */}
           <HStack space="sm" alignItems="center">
             <Box
-              bg={warnaGlobalMerah.light}
+              bg={warnaGlobal.light}
               w={40}
               h={40}
               borderRadius="$full"
@@ -141,21 +118,20 @@ export default function RecipeDetail() {
                 Fuad Gedhangan
               </Text>
               <HStack space="xs" alignItems="center">
-                <Text color="$amber500" fontSize="$xs">
-                  📍
-                </Text>
+                <Ionicons name="location" color="#dc2626" size={12} />
+
                 <Text fontSize="$xs" color="$coolGray500">
                   Gedhangan Aloha, Malaysia
                 </Text>
               </HStack>
             </VStack>
             <Pressable
-              bg={warnaGlobalMerah.primary}
+              bg={warnaGlobal.primary}
               px="$5"
               py="$2"
               borderRadius="$lg"
             >
-              <Text color="$white" fontSize="$sm" fontWeight="$semibold">
+              <Text color={warnaGlobal.white} fontSize="$sm" fontWeight="$semibold">
                 Ikuti
               </Text>
             </Pressable>
@@ -168,15 +144,15 @@ export default function RecipeDetail() {
               onPress={() => setActiveTab("bahan")}
               bg={
                 activeTab === "bahan"
-                  ? warnaGlobalMerah.primary
-                  : "$coolGray100"
+                  ? warnaGlobal.primary
+                  : warnaGlobal.gray100
               }
               py="$3"
               borderRadius="$lg"
               alignItems="center"
             >
               <Text
-                color={activeTab === "bahan" ? "$white" : "$coolGray600"}
+                color={activeTab === "bahan" ? warnaGlobal.white : warnaGlobal.gray600}
                 fontSize="$sm"
                 fontWeight="$semibold"
               >
@@ -188,15 +164,15 @@ export default function RecipeDetail() {
               onPress={() => setActiveTab("prosedur")}
               bg={
                 activeTab === "prosedur"
-                  ? warnaGlobalMerah.primary
-                  : "$coolGray100"
+                  ? warnaGlobal.primary
+                  : warnaGlobal.gray100
               }
               py="$3"
               borderRadius="$lg"
               alignItems="center"
             >
               <Text
-                color={activeTab === "prosedur" ? "$white" : "$coolGray600"}
+                color={activeTab === "prosedur" ? warnaGlobal.white : warnaGlobal.gray600}
                 fontSize="$sm"
                 fontWeight="$semibold"
               >
@@ -213,13 +189,13 @@ export default function RecipeDetail() {
                 <HStack
                   key={index}
                   space="md"
-                  bg="$coolGray50"
+                  bg={warnaGlobal.gray50}
                   p="$4"
                   borderRadius="$xl"
                   alignItems="center"
                 >
                   <Box
-                    bg="$white"
+                    bg={warnaGlobal.white}
                     w={50}
                     h={50}
                     borderRadius="$lg"
@@ -233,7 +209,7 @@ export default function RecipeDetail() {
                       {item.name}
                     </Text>
                   </VStack>
-                  <Text fontSize="$sm" color="$coolGray500">
+                  <Text fontSize="$sm" color={warnaGlobal.gray500}>
                     {item.amount}
                   </Text>
                 </HStack>
@@ -246,28 +222,28 @@ export default function RecipeDetail() {
                 <VStack key={index} space="sm">
                   <HStack space="sm" alignItems="flex-start">
                     <Box
-                      bg={warnaGlobalMerah.primary}
+                      bg={warnaGlobal.primary}
                       w={28}
                       h={28}
                       borderRadius="$full"
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Text color="$white" fontSize="$sm" fontWeight="$bold">
+                      <Text color={warnaGlobal.white} fontSize="$sm" fontWeight="$bold">
                         {index + 1}
                       </Text>
                     </Box>
                     <Text
                       flex={1}
                       fontSize="$sm"
-                      color="$coolGray700"
+                      color={warnaGlobal.gray700}
                       lineHeight="$lg"
                     >
                       {step}
                     </Text>
                   </HStack>
                   {index < recipe.steps.length - 1 && (
-                    <Box ml="$3" h={1} bg="$coolGray200" />
+                    <Box ml="$3" h={1} bg={warnaGlobal.gray200} />
                   )}
                 </VStack>
               ))}
