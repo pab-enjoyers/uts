@@ -5,38 +5,30 @@
 // ========================================
 
 export const colors = {
-  // Brand Colors - Warna identitas setiap member tim
-  syihab: '$red500',
-  angela: '$cyan500',
-  deru: '$blue500',
-  najma: '$orange500',
+  // Navigation Colors (untuk tab bar)
+  tabActive: '#EF4444',      // Warna tab yang aktif (Merah)
+  tabInactive: '#9CA3AF',    // Warna tab yang tidak aktif (Abu)
   
-  // Navigation Colors
-  tabActive: '#EF4444',      // Warna tab yang aktif
-  tabInactive: '#9CA3AF',    // Warna tab yang tidak aktif
-  
-  // UI Colors - Warna umum untuk komponen
-  primary: '$primary500',         // Indigo/Purple
-  secondary: '$secondary500',     // Gray
-  success: '$success500',         // Green
-  warning: '$warning500',         // Yellow/Orange
-  error: '$error500',             // Red
-  info: '$info500',               // Blue
+  // UI Colors - Untuk komponen Button, Layout, dll
+  primary: '$primary500',
+  secondary: '$secondary500',
+  success: '$success500',
+  warning: '$warning500',
+  error: '$error500',
   
   // Background Colors
-  background: '$backgroundLight0',      // White
-  backgroundSecondary: '$backgroundLight50',  // Light gray
-  backgroundDark: '$backgroundDark900', // Dark mode
+  background: '$backgroundLight0',
+  backgroundSecondary: '$backgroundLight50',
   
   // Text Colors
-  text: '$textLight900',          // Black/Dark gray
-  textSecondary: '$textLight500', // Medium gray
-  textLight: '$textLight400',     // Light gray
-  textWhite: '$white',            // White text
+  text: '$textLight900',
+  textSecondary: '$textLight500',
+  textLight: '$textLight400',
+  textWhite: '$white',
   
   // Border & Divider
-  border: '$borderLight300',      // Border warna
-  divider: '$borderLight200',     // Garis pemisah
+  border: '$borderLight300',
+  divider: '$borderLight200',
 };
 
 // Common spacing values
@@ -46,14 +38,6 @@ export const spacing = {
   md: '$4',
   lg: '$5',
   xl: '$6',
-};
-
-// Common sizes
-export const sizes = {
-  buttonHeight: '$12',
-  inputHeight: '$10',
-  iconSize: 24,
-  headerIconSize: 28,
 };
 
 // Button styles presets
@@ -139,43 +123,67 @@ export const typography = {
   small: { size: 'xs', fontWeight: '$normal' },
 };
 
-// Tema Kelompok - Konfigurasi warna untuk setiap anggota
-// Setiap member punya warna unik untuk personalisasi screen
-export const temaKelompok = {
-  syihab: {
-    primary: '$red500',
-    secondary: '$red300',
-    accent: '$red700',
-    light: '$red100',
-  },
-  angela: {
-    primary: '$cyan500',
-    secondary: '$cyan300',
-    accent: '$cyan700',
-    light: '$cyan100',
-  },
-  deru: {
-    primary: '$blue500',
-    secondary: '$blue300',
-    accent: '$blue700',
-    light: '$blue100',
-  },
-  najma: {
-    primary: '$orange500',
-    secondary: '$orange300',
-    accent: '$orange700',
-    light: '$orange100',
-  },
+// Warna Global - Digunakan di semua screen untuk konsistensi
+// Warna-warna yang sering dipakai di aplikasi
+export const warnaGlobal = {
+  // Brand Colors - Merah sebagai warna utama
+  primary: '$red500',      // #ef4444 - Merah utama
+  secondary: '$red300',    // #fca5a5 - Merah muda
+  accent: '$red700',       // #b91c1c - Merah gelap
+  light: '$red100',        // #fee2e2 - Merah sangat muda
+
+  // Hex values untuk React Native components yang butuh hex
+  primaryHex: '#ef4444',
+  secondaryHex: '#fca5a5',
+  accentHex: '#b91c1c',
+  lightHex: '#fee2e2',
+  
+  // Gray Scale - Untuk text, backgrounds, borders
+  gray50: '$coolGray50',    // #f9fafb - Background terang
+  gray100: '$coolGray100',  // #f3f4f6 - Background
+  gray200: '$coolGray200',  // #e5e7eb - Divider
+  gray300: '$coolGray300',  // #d1d5db - Border
+  gray400: '$coolGray400',  // #9ca3af - Icon inactive
+  gray500: '$coolGray500',  // #6b7280 - Text secondary
+  gray600: '$coolGray600',  // #4b5563 - Text primary
+  gray700: '$coolGray700',  // #374151 - Text dark
+  gray800: '$coolGray800',  // #1f2937 - Background dark
+  gray900: '$coolGray900',  // #111827 - Text darkest
+  
+  // Gray Hex values
+  gray50Hex: '#f9fafb',
+  gray100Hex: '#f3f4f6',
+  gray200Hex: '#e5e7eb',
+  gray300Hex: '#d1d5db',
+  gray400Hex: '#9ca3af',
+  gray500Hex: '#6b7280',
+  gray600Hex: '#4b5563',
+  gray700Hex: '#374151',
+  gray800Hex: '#1f2937',
+  
+  // Amber/Yellow - Untuk rating, badges
+  amber400: '$amber400',    // #fbbf24 - Rating stars
+  amber500: '$amber500',    // #f59e0b - Badges
+  amber400Hex: '#fbbf24',
+  
+  // Utility Colors
+  white: '$white',          // #ffffff
+  whiteHex: '#ffffff',
+  black: '$black',          // #000000
+  blackHex: '#000000',
 };
+
+// Alias untuk backward compatibility
+export const warnaGlobalMerah = warnaGlobal;
 
 export default {
   colors,
   spacing,
-  sizes,
   buttonStyles,
   inputStyles,
   cardStyles,
   borderRadius,
   typography,
-  temaKelompok,
+  warnaGlobal,
+  warnaGlobalMerah, // Alias untuk backward compatibility
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, temaKelompok } from '../../styles';
+import { Container, warnaGlobal } from '../../styles';
 import { VStack, Heading, Text, Button, ButtonText } from '@gluestack-ui/themed';
 import { router } from 'expo-router';
 
@@ -9,7 +9,7 @@ export default function SyihabTab() {
       <VStack space="lg" p="$5">
         <VStack space="sm" alignItems="center" mb="$4">
           <Text fontSize={60}>👨‍🍳</Text>
-          <Heading size="xl" color={temaKelompok.syihab.primary}>
+          <Heading size="xl" color={warnaGlobal.primary}>
             Syihab's Section
           </Heading>
           <Text color="$coolGray600" textAlign="center">
@@ -19,7 +19,7 @@ export default function SyihabTab() {
 
         <Button 
           size="lg" 
-          bg={temaKelompok.syihab.primary}
+          bg={warnaGlobal.primary}
           onPress={() => router.push('/syihab/splash')}
         >
           <ButtonText>🚀 Lihat Demo Screens</ButtonText>
