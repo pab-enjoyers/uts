@@ -1,23 +1,42 @@
+// ========================================
+// 🎨 GLOBAL THEME SYSTEM
+// Gunakan theme ini di semua screen untuk konsistensi
+// Sesuai syarat.md: Gluestack UI, Functional Components, Props & State
+// ========================================
+
 export const colors = {
-  // Primary colors untuk setiap member
+  // Brand Colors - Warna identitas setiap member tim
   syihab: '$red500',
   angela: '$cyan500',
   deru: '$blue500',
   najma: '$orange500',
   
-  // Navigation colors
-  tabActive: '#EF4444',
-  tabInactive: '#9CA3AF',
+  // Navigation Colors
+  tabActive: '#EF4444',      // Warna tab yang aktif
+  tabInactive: '#9CA3AF',    // Warna tab yang tidak aktif
   
-  // Common colors
-  primary: '$primary500',
-  secondary: '$secondary500',
-  success: '$success500',
-  warning: '$warning500',
-  error: '$error500',
-  background: '$backgroundLight0',
-  text: '$textLight900',
-  textSecondary: '$textLight500',
+  // UI Colors - Warna umum untuk komponen
+  primary: '$primary500',         // Indigo/Purple
+  secondary: '$secondary500',     // Gray
+  success: '$success500',         // Green
+  warning: '$warning500',         // Yellow/Orange
+  error: '$error500',             // Red
+  info: '$info500',               // Blue
+  
+  // Background Colors
+  background: '$backgroundLight0',      // White
+  backgroundSecondary: '$backgroundLight50',  // Light gray
+  backgroundDark: '$backgroundDark900', // Dark mode
+  
+  // Text Colors
+  text: '$textLight900',          // Black/Dark gray
+  textSecondary: '$textLight500', // Medium gray
+  textLight: '$textLight400',     // Light gray
+  textWhite: '$white',            // White text
+  
+  // Border & Divider
+  border: '$borderLight300',      // Border warna
+  divider: '$borderLight200',     // Garis pemisah
 };
 
 // Common spacing values
@@ -79,6 +98,73 @@ export const cardStyles = {
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 3,
+  },
+  elevated: {
+    p: spacing.md,
+    bg: '$white',
+    borderRadius: '$lg',
+    shadowColor: '$black',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  outlined: {
+    p: spacing.md,
+    bg: '$white',
+    borderRadius: '$lg',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+};
+
+// Border Radius presets
+export const borderRadius = {
+  none: '$none',
+  sm: '$sm',
+  md: '$md',
+  lg: '$lg',
+  xl: '$xl',
+  full: '$full',
+};
+
+// Typography presets
+export const typography = {
+  h1: { size: '3xl', fontWeight: '$bold' },
+  h2: { size: '2xl', fontWeight: '$bold' },
+  h3: { size: 'xl', fontWeight: '$semibold' },
+  body: { size: 'md', fontWeight: '$normal' },
+  caption: { size: 'sm', fontWeight: '$normal' },
+  small: { size: 'xs', fontWeight: '$normal' },
+};
+
+// Tema Kelompok - Konfigurasi warna untuk setiap anggota
+// Setiap member punya warna unik untuk personalisasi screen
+export const temaKelompok = {
+  syihab: {
+    primary: '$red500',
+    secondary: '$red300',
+    accent: '$red700',
+    light: '$red100',
+  },
+  angela: {
+    primary: '$cyan500',
+    secondary: '$cyan300',
+    accent: '$cyan700',
+    light: '$cyan100',
+  },
+  deru: {
+    primary: '$blue500',
+    secondary: '$blue300',
+    accent: '$blue700',
+    light: '$blue100',
+  },
+  najma: {
+    primary: '$orange500',
+    secondary: '$orange300',
+    accent: '$orange700',
+    light: '$orange100',
   },
 };
 
@@ -89,4 +175,7 @@ export default {
   buttonStyles,
   inputStyles,
   cardStyles,
+  borderRadius,
+  typography,
+  temaKelompok,
 };

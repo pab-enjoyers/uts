@@ -7,10 +7,10 @@ export default function RootLayout() {
   return (
     <GluestackUIProvider config={config}>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="syihab/screen1" />
-        <Stack.Screen name="syihab/screen2" />
-        <Stack.Screen name="syihab/screen3" />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="syihab/splash" options={{ headerShown: false }} />
+        <Stack.Screen name="syihab/onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
     </GluestackUIProvider>
   );
