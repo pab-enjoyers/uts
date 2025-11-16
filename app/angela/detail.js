@@ -16,13 +16,11 @@ export default function RecipeDetail() {
   const params = useLocalSearchParams();
   const { id, name, image, rating, time } = params;
 
-  // State untuk tab switcher dan follow button (Props & State requirement)
   const [activeTab, setActiveTab] = useState("bahan");
   const [isFollowing, setIsFollowing] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-  // Ambil data resep sesuai nama atau gunakan default
   const currentRecipe =
     recipeDetails[name] || recipeDetails["Classic Greek Salad"];
 

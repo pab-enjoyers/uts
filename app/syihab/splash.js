@@ -64,7 +64,8 @@ export default function SplashScreen() {
             color={warnaGlobal.accent}
             fontWeight="$medium"
           >
-            Kelompok 67
+            Kelompok 4 PAB 
+            IS-05-02
           </Text>
         </VStack>
 
