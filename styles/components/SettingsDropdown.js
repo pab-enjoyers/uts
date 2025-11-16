@@ -1,8 +1,3 @@
-// ========================================
-// ⚙️ SETTINGS DROPDOWN COMPONENT
-// Reusable dropdown menu untuk settings
-// ========================================
-
 import React from 'react';
 import { VStack, Box, Text, Pressable } from '@gluestack-ui/themed';
 import { Ionicons } from '@expo/vector-icons';

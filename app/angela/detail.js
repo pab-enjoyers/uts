@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Container, warnaGlobal, IconButton } from "../../styles";
+import { Container, warnaGlobal, IconButton, ShareModal } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
 import {
   VStack,
@@ -20,6 +20,7 @@ export default function RecipeDetail() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const currentRecipe =
     recipeDetails[name] || recipeDetails["Classic Greek Salad"];
@@ -104,7 +105,7 @@ export default function RecipeDetail() {
                     <VStack space="xs">
                       <Pressable
                         onPress={() => {
-                          console.log("Share");
+                          setShowShareModal(true);
                           setShowMenu(false);
                         }}
                         py="$2"
@@ -129,7 +130,10 @@ export default function RecipeDetail() {
 
                       <Pressable
                         onPress={() => {
-                          console.log("Rate Recipe");
+                          router.push({
+                            pathname: "/syihab/rate-resep",
+                            params: { recipeName: recipe.name },
+                          });
                           setShowMenu(false);
                         }}
                         py="$2"
@@ -154,7 +158,10 @@ export default function RecipeDetail() {
 
                       <Pressable
                         onPress={() => {
-                          console.log("Review");
+                          router.push({
+                            pathname: "/syihab/reviews",
+                            params: { recipeName: recipe.name },
+                          });
                           setShowMenu(false);
                         }}
                         py="$2"
@@ -197,7 +204,7 @@ export default function RecipeDetail() {
                             color="$black"
                             fontWeight="$normal"
                           >
-                            {isSaved ? "Saved" : "Unsave"}
+                            {isSaved ? "Tersimpan" : "Simpan"}
                           </Text>
                         </HStack>
                       </Pressable>
@@ -238,9 +245,18 @@ export default function RecipeDetail() {
                 <Heading size="lg" fontWeight="$bold">
                   {recipe.name}
                 </Heading>
-                <Text fontSize="$sm" color="$coolGray500">
-                  (15 Ulasan)
-                </Text>
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/syihab/reviews",
+                      params: { recipeName: recipe.name },
+                    })
+                  }
+                >
+                  <Text fontSize="$sm" color="$coolGray500">
+                    (15 Ulasan)
+                  </Text>
+                </Pressable>
               </HStack>
 
               {/* Author info */}
@@ -414,6 +430,14 @@ export default function RecipeDetail() {
           </VStack>
         </Pressable>
       </Container>
+
+      {/* Share Modal */}
+      <ShareModal
+        isVisible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        recipeName={recipe.name}
+        recipeLink={`app.resep.co.id/aDxzc2Adkkl`}
+      />
     </Box>
   );
 }
