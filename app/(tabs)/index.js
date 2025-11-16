@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView as RNScrollView } from "react-native";
+import { ScrollView as RNScrollView, Image } from "react-native";
 import {
   Container,
   warnaGlobal,
@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { categories, featuredRecipes, popularRecipes } from "../../data/resep";
+import { userData } from "../../data/profile";
 
 import {
   VStack,
@@ -65,17 +66,33 @@ export default function HomePage() {
           <HStack justifyContent="space-between" alignItems="center" mb="$4">
             <VStack>
               <Heading size="xl" fontWeight="$bold">
-                Halo Fuad Gedhangan
+                Halo {userData.name}
               </Heading>
               <Text size="sm" color={warnaGlobal.gray500}>
                 Mau masak apa hari ini?
               </Text>
             </VStack>
-            <Avatar size="md" bg={warnaGlobal.light}>
-              <Text fontSize="$xl">
-                <Ionicons name="person" size={24} color="white" />
-              </Text>
-            </Avatar>
+            {userData.avatarImage ? (
+              <Box
+                w={48}
+                h={48}
+                borderRadius="$full"
+                overflow="hidden"
+                bg={warnaGlobal.gray100}
+              >
+                <Image
+                  source={userData.avatarImage}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                />
+              </Box>
+            ) : (
+              <Avatar size="md" bg={warnaGlobal.light}>
+                <Text fontSize="$xl">
+                  <Ionicons name="person" size={24} color="white" />
+                </Text>
+              </Avatar>
+            )}
           </HStack>
 
           {/* Search Bar */}
