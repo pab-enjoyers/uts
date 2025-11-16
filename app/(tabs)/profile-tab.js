@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView as RNScrollView, Image } from "react-native";
-import { Container, warnaGlobal, RecipeCard, SettingsDropdown } from "../../styles";
+import { Container, warnaGlobal, RecipeCard } from "../../styles";
 import {
   VStack,
   HStack,
@@ -20,7 +20,6 @@ export default function ProfileTab() {
   // State untuk bookmark dan active tab (Props & State requirement)
   const [bookmarkedRecipes, setBookmarkedRecipes] = React.useState([]);
   const [activeTab, setActiveTab] = React.useState("recipe");
-  const [showDropdown, setShowDropdown] = React.useState(false);
 
   return (
     <Box flex={1} bg="$white">
@@ -46,30 +45,13 @@ export default function ProfileTab() {
           >
             Profile
           </Heading>
-          <Pressable onPress={() => setShowDropdown(!showDropdown)}>
+          <Pressable onPress={() => router.push('/syihab/settings')}>
             <Ionicons
               name="settings-outline"
               size={24}
               color={warnaGlobal.gray700Hex}
             />
           </Pressable>
-
-          {/* Settings Dropdown */}
-          <SettingsDropdown
-            isVisible={showDropdown}
-            onClose={() => setShowDropdown(false)}
-            onSelect={(option) => {
-              if (option === 'faq') {
-                router.push('/angela/faq');
-              } else if (option === 'akun') {
-                router.push('/deru/account');
-              } else if (option === 'help') {
-                router.push('/deru/help');
-              } else if (option === 'riwayat') {
-                router.push('/deru/history');
-              }
-            }}
-          />
         </HStack>
       </Box>
 

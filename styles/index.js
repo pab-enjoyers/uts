@@ -21,3 +21,4 @@ export * from './components/IconButton';
 export * from './components/NotifikasiCard';
 export * from './components/SettingsDropdown';
 export * from './components/AccordionItem';
+export * from './components/ShareModal';
