@@ -98,7 +98,6 @@ export default function NotificationsPage() {
               Dibaca
             </Text>
           </Pressable>
-
           <Pressable
             onPress={() => setActiveTab("belum dibaca")}
             bg={
@@ -123,7 +122,6 @@ export default function NotificationsPage() {
           </Pressable>
         </HStack>
       </Box>
-
       {/* Scrollable Content with Padding Top for Sticky Header */}
       <Container scrollable bg="$white" padding="$0">
         <VStack space="lg" px="$4" mt="$48" pb="$24">

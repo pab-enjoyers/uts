@@ -150,7 +150,7 @@ export default function TabsLayout() {
         name="profile-tab"
         options={{
           title: "Profile",
-          headerShown: true,
+          headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Box alignItems="center" gap="$1">
               {focused && (
