@@ -19,3 +19,5 @@ export * from './components/RecipeListItem';
 export * from './components/CategoryChip';
 export * from './components/IconButton';
 export * from './components/NotifikasiCard';
+export * from './components/SettingsDropdown';
+export * from './components/AccordionItem';
