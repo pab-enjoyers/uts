@@ -62,9 +62,11 @@ export default function ProfileTab() {
               if (option === 'faq') {
                 router.push('/angela/faq');
               } else if (option === 'akun') {
-                console.log('Akun selected');
+                router.push('/deru/account');
               } else if (option === 'help') {
-                console.log('Help selected');
+                router.push('/deru/help');
+              } else if (option === 'riwayat') {
+                router.push('/deru/history');
               }
             }}
           />
