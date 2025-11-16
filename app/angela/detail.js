@@ -131,7 +131,10 @@ export default function RecipeDetail() {
 
                       <Pressable
                         onPress={() => {
-                          console.log("Rate Recipe");
+                          router.push({
+                            pathname: "/syihab/rate-resep",
+                            params: { recipeName: recipe.name }
+                          });
                           setShowMenu(false);
                         }}
                         py="$2"
@@ -156,7 +159,10 @@ export default function RecipeDetail() {
 
                       <Pressable
                         onPress={() => {
-                          console.log("Review");
+                          router.push({
+                            pathname: "/syihab/reviews",
+                            params: { recipeName: recipe.name }
+                          });
                           setShowMenu(false);
                         }}
                         py="$2"
@@ -240,9 +246,16 @@ export default function RecipeDetail() {
                 <Heading size="lg" fontWeight="$bold">
                   {recipe.name}
                 </Heading>
-                <Text fontSize="$sm" color="$coolGray500">
-                  (15 Ulasan)
-                </Text>
+                <Pressable
+                  onPress={() => router.push({
+                    pathname: "/syihab/reviews",
+                    params: { recipeName: recipe.name }
+                  })}
+                >
+                  <Text fontSize="$sm" color="$coolGray500">
+                    (15 Ulasan)
+                  </Text>
+                </Pressable>
               </HStack>
 
               {/* Author info */}
