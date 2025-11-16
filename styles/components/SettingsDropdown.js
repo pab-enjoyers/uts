@@ -15,6 +15,7 @@ export function SettingsDropdown({ isVisible, onClose, onSelect }) {
     { id: 'faq', label: 'FAQ', icon: 'help-circle-outline' },
     { id: 'akun', label: 'Akun', icon: 'person-outline' },
     { id: 'help', label: 'Help', icon: 'information-circle-outline' },
+    { id: 'riwayat', label: 'Riwayat', icon: 'history-outline' },
   ];
 
   return (
