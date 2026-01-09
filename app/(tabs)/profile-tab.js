@@ -1,6 +1,6 @@
 import React from "react";
-import { ScrollView as RNScrollView, Image } from "react-native";
-import { Container, warnaGlobal, RecipeCard } from "../../styles";
+import { ScrollView as RNScrollView, Image, Alert } from "react-native";
+import { Container, warnaGlobal, RecipeCard, CustomButton } from "../../styles";
 import {
   VStack,
   HStack,
@@ -15,11 +15,47 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { userData, profileResep } from "../../data/profile";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ProfileTab() {
   // State untuk bookmark dan active tab (Props & State requirement)
   const [bookmarkedRecipes, setBookmarkedRecipes] = React.useState([]);
   const [activeTab, setActiveTab] = React.useState("recipe");
+  const [logoutLoading, setLogoutLoading] = React.useState(false);
+  
+  // Auth context
+  const { logout, user } = useAuth();
+
+  /**
+   * Handle logout dengan konfirmasi
+   */
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Apakah Anda yakin ingin keluar?',
+      [
+        {
+          text: 'Batal',
+          style: 'cancel'
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            setLogoutLoading(true);
+            const result = await logout();
+            setLogoutLoading(false);
+            
+            if (result.success) {
+              router.replace('/auth/login');
+            } else {
+              Alert.alert('Error', result.error || 'Gagal logout');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <Box flex={1} bg="$white">
@@ -120,9 +156,14 @@ export default function ProfileTab() {
 
             {/* Name and Bio - Left aligned */}
             <VStack space="xs" alignItems="flex-start" w="$full" mt="$3">
-              <Heading size="lg" fontWeight="$bold" color={warnaGlobal.gray900}>
-                {userData.name}
-              </Heading>
+              <HStack justifyContent="space-between" alignItems="center" w="$full">
+                <Heading size="lg" fontWeight="$bold" color={warnaGlobal.gray900}>
+                  {user?.nama || userData.name}
+                </Heading>
+                <Pressable onPress={() => router.push('/auth/edit-profile')}>
+                  <Ionicons name="create-outline" size={20} color="#EF4444" />
+                </Pressable>
+              </HStack>
 
               <Text
                 fontSize="$sm"
@@ -138,7 +179,7 @@ export default function ProfileTab() {
                 lineHeight="$sm"
                 mt="$1"
               >
-                {userData.bio}
+                {user?.bio || userData.bio}
               </Text>
 
               <Pressable onPress={() => console.log("View more")}>
@@ -146,6 +187,28 @@ export default function ProfileTab() {
                   More...
                 </Text>
               </Pressable>
+              
+              {/* Display logged in user email if available */}
+              {user && user.email && (
+                <Box mt="$2" w="$full">
+                  <Text fontSize="$xs" color={warnaGlobal.gray400}>
+                    🔐 {user.email}
+                  </Text>
+                </Box>
+              )}
+              
+              {/* Logout Button */}
+              <Box mt="$3" w="$full">
+                <CustomButton
+                  title={logoutLoading ? "Logging out..." : "Logout"}
+                  onPress={handleLogout}
+                  variant="outline"
+                  colorScheme="danger"
+                  size="sm"
+                  isLoading={logoutLoading}
+                  isDisabled={logoutLoading}
+                />
+              </Box>
             </VStack>
           </VStack>
 
