@@ -13,7 +13,6 @@ import {
 import { Container, warnaGlobal, spacing } from '../../styles';
 
 export default function OnboardingScreen() {
-  // slides data dan current slide  1C)
   const [currentSlide, setCurrentSlide] = useState(0);
   
   const slides = [

@@ -1,9 +1,3 @@
-// ========================================
-// 🎨 GLOBAL THEME SYSTEM
-// Gunakan theme ini di semua screen untuk konsistensi
-// Sesuai syarat.md: Gluestack UI, Functional Components, Props & State
-// ========================================
-
 export const colors = {
   // Navigation Colors (untuk tab bar)
   tabActive: '#EF4444',      // Warna tab yang aktif (Merah)

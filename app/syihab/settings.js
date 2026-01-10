@@ -95,7 +95,6 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    // Logout logic - bisa ditambahkan nanti
     console.log("Logout pressed");
   };
 
