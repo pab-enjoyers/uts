@@ -22,7 +22,7 @@ const APP_LOGO = 'https://media.discordapp.net/attachments/1353606414383448065/1
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { login } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,13 +45,14 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      const result = await signIn(email.trim(), password);
+      const result = await login(email.trim(), password);
       if (result.success) {
         router.replace('/(tabs)');
       } else {
         setError(result.error || 'Login gagal');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('Terjadi kesalahan. Coba lagi.');
     } finally {
       setLoading(false);

@@ -12,6 +12,7 @@ import {
 } from "@gluestack-ui/themed";
 import { router } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Settings() {
   const { logout } = useAuth();
@@ -121,6 +122,30 @@ export default function Settings() {
               router.replace('/auth/login');
             } else {
               Alert.alert('Error', result.error || 'Gagal logout');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleResetOnboarding = () => {
+    Alert.alert(
+      'Reset Onboarding',
+      'Ini akan menampilkan splash & onboarding screen saat membuka app. Lanjutkan?',
+      [
+        {
+          text: 'Batal',
+          style: 'cancel'
+        },
+        {
+          text: 'Reset',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('hasSeenOnboarding');
+              Alert.alert('Berhasil', 'Onboarding akan muncul saat app dibuka ulang');
+            } catch (error) {
+              Alert.alert('Error', 'Gagal reset onboarding');
             }
           }
         }
@@ -259,6 +284,42 @@ export default function Settings() {
                     >
                       Keluar
                     </Text>
+                  </HStack>
+                </Box>
+              )}
+            </Pressable>
+          </Box>
+
+          {/* Reset Onboarding Button - for testing */}
+          <Box px="$5" mt="$2">
+            <Pressable onPress={handleResetOnboarding}>
+              {({ pressed }) => (
+                <Box
+                  bg={pressed ? warnaGlobal.gray50 : "$white"}
+                  px="$5"
+                  py="$3.5"
+                  borderRadius="$lg"
+                  borderWidth={1}
+                  borderColor={warnaGlobal.gray200}
+                >
+                  <HStack alignItems="center" space="md">
+                    <Ionicons
+                      name="refresh-outline"
+                      size={24}
+                      color={warnaGlobal.gray600Hex || "#4B5563"}
+                    />
+                    <VStack>
+                      <Text
+                        fontSize="$md"
+                        color={warnaGlobal.gray900}
+                        fontWeight="$semibold"
+                      >
+                        Reset Onboarding
+                      </Text>
+                      <Text fontSize="$xs" color={warnaGlobal.gray500}>
+                        Tampilkan splash & onboarding saat buka app
+                      </Text>
+                    </VStack>
                   </HStack>
                 </Box>
               )}

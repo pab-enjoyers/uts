@@ -22,7 +22,7 @@ const APP_LOGO = 'https://media.discordapp.net/attachments/1353606414383448065/1
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { register } = useAuth();
   
   const [nama, setNama] = useState('');
   const [email, setEmail] = useState('');
@@ -70,13 +70,14 @@ export default function RegisterScreen() {
     setError('');
 
     try {
-      const result = await signUp(email.trim(), password, nama.trim());
+      const result = await register(email.trim(), password, nama.trim());
       if (result.success) {
         router.replace('/(tabs)');
       } else {
         setError(result.error || 'Registrasi gagal');
       }
     } catch (err) {
+      console.error('Register error:', err);
       setError('Terjadi kesalahan. Coba lagi.');
     } finally {
       setLoading(false);
