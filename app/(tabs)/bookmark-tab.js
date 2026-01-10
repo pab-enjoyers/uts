@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ScrollView as RNScrollView, Image, Alert, RefreshControl } from "react-native";
-import { Container, warnaGlobal, RecipeListItem, CustomButton, Card } from "../../styles";
+import { Container, warnaGlobal, RecipeListItem, CustomButton, Card, CategoryChip } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
@@ -29,6 +29,8 @@ export default function BookmarkTab() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [categories, setCategories] = useState(["All"]);
   const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
@@ -89,7 +91,12 @@ export default function BookmarkTab() {
         });
 
         const recipes = await Promise.all(recipesPromises);
-        setBookmarks(recipes.filter(Boolean)); // Filter null values
+        const validRecipes = recipes.filter(Boolean);
+        setBookmarks(validRecipes);
+        
+        // Extract unique categories
+        const uniqueCategories = ["All", ...new Set(validRecipes.map(r => r.category).filter(Boolean))];
+        setCategories(uniqueCategories);
       }
     } catch (error) {
       console.error("Error loading bookmarks:", error);
@@ -266,6 +273,11 @@ export default function BookmarkTab() {
     );
   }
 
+  // Filter bookmarks by category
+  const filteredBookmarks = selectedCategory === "All" 
+    ? bookmarks 
+    : bookmarks.filter(b => b.category === selectedCategory);
+
   // Bookmarks list
   return (
     <Container scrollable bg="$white" padding="$0">
@@ -278,20 +290,55 @@ export default function BookmarkTab() {
         <VStack space="lg" px="$5" py="$6" pb="$24">
           {/* Header */}
           <VStack space="sm">
-            {/* <Heading size="2xl" fontWeight="$bold">
-              Resep Tersimpan
-            </Heading> */}
-            <HStack alignItems="center" space="xs">
-              <Ionicons name="bookmark" size={16} color={warnaGlobal.primary} />
-              <Text color={warnaGlobal.gray600} fontSize="$sm">
-                {bookmarks.length} resep
-              </Text>
+            <HStack alignItems="center" justifyContent="space-between">
+              <HStack alignItems="center" space="xs">
+                <Ionicons name="bookmark" size={16} color={warnaGlobal.primary} />
+                <Text color={warnaGlobal.gray600} fontSize="$sm">
+                  {filteredBookmarks.length} resep
+                </Text>
+              </HStack>
             </HStack>
           </VStack>
+          
+          {/* Category Filter - Sama seperti Dashboard */}
+          <RNScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 0 }}
+            style={{ marginHorizontal: 0 }}
+          >
+            <HStack space="sm">
+              {categories.map((cat) => (
+                <CategoryChip
+                  key={cat}
+                  category={cat}
+                  isActive={selectedCategory === cat}
+                  onPress={() => {
+                    setSelectedCategory(cat);
+                    setPage(1); // Reset page when category changes
+                  }}
+                  activeColor={warnaGlobal.primary}
+                />
+              ))}
+            </HStack>
+          </RNScrollView>
+
+          {/* Empty state for filtered category */}
+          {filteredBookmarks.length === 0 && (
+            <Box alignItems="center" justifyContent="center" py="$10">
+              <Ionicons name="folder-open-outline" size={64} color={warnaGlobal.gray400} />
+              <Text mt="$4" fontSize="$md" fontWeight="$semibold" color={warnaGlobal.gray700}>
+                Tidak ada resep di kategori ini
+              </Text>
+              <Text mt="$2" color={warnaGlobal.gray500} textAlign="center">
+                Coba pilih kategori lain
+              </Text>
+            </Box>
+          )}
 
           {/* Bookmarks List */}
           <VStack space="md">
-            {bookmarks.slice(0, page * ITEMS_PER_PAGE).map((recipe, index) => (
+            {filteredBookmarks.slice(0, page * ITEMS_PER_PAGE).map((recipe, index) => (
               <Box key={recipe.id} position="relative">
                 {/* Recipe Card - Direct Pressable */}
                 <Pressable
@@ -406,13 +453,13 @@ export default function BookmarkTab() {
           </VStack>
 
           {/* Load More Button */}
-          {bookmarks.length > page * ITEMS_PER_PAGE && (
+          {filteredBookmarks.length > page * ITEMS_PER_PAGE && (
             <CustomButton
               variant="outline"
               onPress={() => setPage(page + 1)}
               mt="$4"
             >
-              Muat Lebih Banyak ({bookmarks.length - (page * ITEMS_PER_PAGE)} resep)
+              Muat Lebih Banyak ({filteredBookmarks.length - (page * ITEMS_PER_PAGE)} resep)
             </CustomButton>
           )}
         </VStack>

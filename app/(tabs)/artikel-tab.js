@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FlatList, Image, ActivityIndicator, ScrollView } from "react-native";
+import { FlatList, Image, ActivityIndicator, ScrollView as RNScrollView } from "react-native";
 import { 
   Box, 
   VStack, 
@@ -21,7 +21,7 @@ import {
 } from "@gluestack-ui/themed";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import { warnaGlobal } from "../../styles/theme";
+import { warnaGlobal, CategoryChip } from "../../styles";
 import { getAllArtikel } from "../../services/artikelService";
 import { getUserProfile } from "../../services/userService";
 import { Container } from "../../styles";
@@ -98,39 +98,6 @@ export default function ArtikelTab() {
       params: { id: articleId },
     });
   };
-
-  const renderCategoryChip = ({ item }) => (
-    <Pressable
-      onPress={() => setSelectedCategory(item.id)}
-      bg={
-        selectedCategory === item.id
-          ? warnaGlobal.primaryHex
-          : warnaGlobal.gray100
-      }
-      px="$4"
-      py="$2.5"
-      borderRadius="$full"
-      mr="$2"
-      borderWidth={1}
-      borderColor={
-        selectedCategory === item.id
-          ? warnaGlobal.primaryHex
-          : warnaGlobal.gray300
-      }
-    >
-      <Text
-        color={
-          selectedCategory === item.id
-            ? "$white"
-            : warnaGlobal.gray700
-        }
-        fontWeight="$medium"
-        fontSize="$sm"
-      >
-        {item.name}
-      </Text>
-    </Pressable>
-  );
 
   const renderArticleItem = ({ item }) => {
     const author = authorsCache[item.userId];
@@ -314,16 +281,24 @@ export default function ArtikelTab() {
       {/* Content */}
       <Container>
         <VStack space="sm" pt="$1" pb="$24">
-          {/* Kategori Filter */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {/* Kategori Filter - Sama seperti Dashboard */}
+          <RNScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 0 }}
+          >
             <HStack space="sm">
               {CATEGORIES.map((category) => (
-                <Box key={category.id}>
-                  {renderCategoryChip({ item: category })}
-                </Box>
+                <CategoryChip
+                  key={category.id}
+                  category={category.name}
+                  isActive={selectedCategory === category.id}
+                  onPress={() => setSelectedCategory(category.id)}
+                  activeColor={warnaGlobal.primary}
+                />
               ))}
             </HStack>
-          </ScrollView>
+          </RNScrollView>
           {/* Articles List - Tampilkan Semua */}
           {loading ? (
             <Box alignItems="center" justifyContent="center" py="$10">

@@ -969,3 +969,74 @@ const formatRelativeTime = (timestamp) => {
   if (diffDays < 7) return `${diffDays} hari lalu`;
   return date.toLocaleDateString('id-ID');
 };
+
+/**
+ * Get all reviews/ratings by a specific user
+ * @param {string} uid - User ID
+ * @returns {Object} { success, reviews: [] }
+ */
+export const getUserReviews = async (uid) => {
+  try {
+    if (!uid) {
+      return { success: false, reviews: [] };
+    }
+
+    console.log('📝 Getting reviews for user:', uid);
+    
+    // Get all mealIds from ratings collection first
+    const ratingsRef = collection(db, 'ratings');
+    const ratingsSnapshot = await getDocs(ratingsRef);
+    
+    console.log('📝 Found', ratingsSnapshot.size, 'meals with ratings');
+    
+    const reviews = [];
+    
+    // For each meal that has ratings, check if user has reviewed
+    for (const mealDoc of ratingsSnapshot.docs) {
+      const mealId = mealDoc.id;
+      
+      try {
+        const userRatingRef = doc(db, 'ratings', mealId, 'userRatings', uid);
+        const userRatingSnap = await getDoc(userRatingRef);
+        
+        if (userRatingSnap.exists()) {
+          const data = userRatingSnap.data();
+          console.log('📝 Found review for meal:', mealId, 'rating:', data.rating);
+          
+          reviews.push({
+            id: userRatingSnap.id,
+            mealId: mealId,
+            mealName: data.mealName || 'Resep',
+            mealThumb: data.mealThumb || '',
+            rating: data.rating || 0,
+            review: data.review || '',
+            createdAt: data.createdAt,
+            likes: data.likes || 0,
+          });
+        }
+      } catch (err) {
+        console.log('Error checking rating for meal:', mealId);
+      }
+    }
+    
+    // Sort by createdAt descending
+    reviews.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+      return dateB - dateA;
+    });
+    
+    console.log('📝 Found', reviews.length, 'reviews for user');
+    
+    return {
+      success: true,
+      reviews
+    };
+  } catch (error) {
+    console.error('❌ Error getting user reviews:', error);
+    return {
+      success: false,
+      reviews: []
+    };
+  }
+};

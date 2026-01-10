@@ -15,13 +15,16 @@ import {
   Fab,
   FabIcon,
   AddIcon,
+  Menu,
+  MenuItem,
+  MenuItemLabel,
 } from "@gluestack-ui/themed";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { profileResep } from "../../data/profile";
 import { useAuth } from "../../context/AuthContext";
-import { getBookmarks, updateUserProfile } from "../../services/userService";
-import { getArtikelByUser } from "../../services/artikelService";
+import { getBookmarks, updateUserProfile, getUserReviews } from "../../services/userService";
+import { getArtikelByUser, deleteArtikel } from "../../services/artikelService";
 import { uploadProfilePhotoToCloudinary } from "../../services/cloudinaryService";
 import * as ImagePicker from 'expo-image-picker';
 
@@ -36,6 +39,10 @@ export default function ProfileTab() {
   // Artikel state
   const [articles, setArticles] = React.useState([]);
   const [loadingArticles, setLoadingArticles] = React.useState(false);
+  
+  // Ulasan/Reviews state
+  const [reviews, setReviews] = React.useState([]);
+  const [loadingReviews, setLoadingReviews] = React.useState(false);
   
   // Photo upload state
   const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
@@ -94,6 +101,32 @@ export default function ProfileTab() {
       setLoadingArticles(false);
     }
   };
+  
+  /**
+   * Load user's reviews dari Firebase
+   */
+  const loadUserReviews = async () => {
+    if (!user || !user.uid) {
+      setReviews([]);
+      setLoadingReviews(false);
+      return;
+    }
+
+    try {
+      setLoadingReviews(true);
+      const result = await getUserReviews(user.uid);
+      if (result.success && result.reviews) {
+        setReviews(result.reviews);
+      } else {
+        setReviews([]);
+      }
+    } catch (error) {
+      console.log("Error loading reviews:", error);
+      setReviews([]);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
 
   /**
    * Auto-refresh bookmark count when screen focused
@@ -109,6 +142,10 @@ export default function ProfileTab() {
       if (activeTab === "artikel") {
         loadUserArticles();
       }
+      // Load reviews if tab is ulasan
+      if (activeTab === "ulasan") {
+        loadUserReviews();
+      }
     }, [user?.uid])
   );
   
@@ -119,7 +156,36 @@ export default function ProfileTab() {
     if (activeTab === "artikel" && user?.uid) {
       loadUserArticles();
     }
+    if (activeTab === "ulasan" && user?.uid) {
+      loadUserReviews();
+    }
   }, [activeTab]);
+
+  /**
+   * Handle delete artikel
+   */
+  const handleDeleteArtikel = (articleId, articleTitle) => {
+    Alert.alert(
+      "Hapus Artikel",
+      `Yakin ingin menghapus artikel "${articleTitle}"?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: async () => {
+            const result = await deleteArtikel(articleId);
+            if (result.success) {
+              Alert.alert("Berhasil", "Artikel berhasil dihapus");
+              loadUserArticles(); // Reload articles
+            } else {
+              Alert.alert("Error", result.error || "Gagal menghapus artikel");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   /**
    * Pick and upload profile photo
@@ -633,6 +699,51 @@ export default function ProfileTab() {
                                 : "Baru saja"}
                             </Text>
                           </HStack>
+                          
+                          {/* Edit/Delete Buttons */}
+                          <HStack space="sm" mt="$3" pt="$3" borderTopWidth={1} borderTopColor={warnaGlobal.gray100}>
+                            <Pressable
+                              flex={1}
+                              onPress={() =>
+                                router.push({
+                                  pathname: "/artikel/edit-artikel",
+                                  params: { id: article.id },
+                                })
+                              }
+                            >
+                              <HStack
+                                space="xs"
+                                alignItems="center"
+                                justifyContent="center"
+                                py="$2"
+                                borderRadius="$lg"
+                                bg={warnaGlobal.gray50}
+                              >
+                                <Ionicons name="create-outline" size={16} color={warnaGlobal.primaryHex} />
+                                <Text fontSize="$xs" fontWeight="$medium" color={warnaGlobal.primaryHex}>
+                                  Edit
+                                </Text>
+                              </HStack>
+                            </Pressable>
+                            <Pressable
+                              flex={1}
+                              onPress={() => handleDeleteArtikel(article.id, article.title)}
+                            >
+                              <HStack
+                                space="xs"
+                                alignItems="center"
+                                justifyContent="center"
+                                py="$2"
+                                borderRadius="$lg"
+                                bg="#FEE2E2"
+                              >
+                                <Ionicons name="trash-outline" size={16} color="#DC2626" />
+                                <Text fontSize="$xs" fontWeight="$medium" color="#DC2626">
+                                  Hapus
+                                </Text>
+                              </HStack>
+                            </Pressable>
+                          </HStack>
                         </Box>
                       </Box>
                     </Pressable>
@@ -645,39 +756,165 @@ export default function ProfileTab() {
           {/* Tab Content: Ulasan */}
           {activeTab === "ulasan" && (
             <Box mt="$6">
-              <Box alignItems="center" justifyContent="center" py="$10">
-                <Ionicons
-                  name="chatbubbles-outline"
-                  size={64}
-                  color={warnaGlobal.gray400}
-                />
-                <Text
-                  mt="$4"
-                  fontSize="$lg"
-                  fontWeight="$semibold"
-                  color={warnaGlobal.gray700}
-                >
-                  Belum Ada Ulasan
-                </Text>
-                <Text mt="$2" color={warnaGlobal.gray500} textAlign="center">
-                  Ulasan yang kamu berikan akan muncul di sini
-                </Text>
-              </Box>
+              {loadingReviews ? (
+                <Box alignItems="center" justifyContent="center" py="$10">
+                  <Spinner size="large" color={warnaGlobal.primaryHex} />
+                  <Text mt="$4" color={warnaGlobal.gray600}>
+                    Memuat ulasan...
+                  </Text>
+                </Box>
+              ) : reviews.length === 0 ? (
+                <Box alignItems="center" justifyContent="center" py="$10">
+                  <Ionicons
+                    name="chatbubbles-outline"
+                    size={64}
+                    color={warnaGlobal.gray400}
+                  />
+                  <Text
+                    mt="$4"
+                    fontSize="$lg"
+                    fontWeight="$semibold"
+                    color={warnaGlobal.gray700}
+                  >
+                    Belum Ada Ulasan
+                  </Text>
+                  <Text mt="$2" color={warnaGlobal.gray500} textAlign="center">
+                    Ulasan yang kamu berikan akan muncul di sini
+                  </Text>
+                </Box>
+              ) : (
+                <VStack space="md">
+                  {reviews.map((review, index) => (
+                    <Pressable
+                      key={review.id || index}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/recipe-detail",
+                          params: { mealId: review.mealId },
+                        })
+                      }
+                    >
+                      <Box
+                        bg="$white"
+                        borderRadius="$xl"
+                        p="$4"
+                        borderWidth={1}
+                        borderColor={warnaGlobal.gray200}
+                      >
+                        <HStack space="md" alignItems="flex-start">
+                          {/* Recipe Thumbnail */}
+                          {review.mealThumb ? (
+                            <Box w={60} h={60} borderRadius="$lg" overflow="hidden">
+                              <Image
+                                source={{ uri: review.mealThumb }}
+                                style={{ width: 60, height: 60, resizeMode: "cover" }}
+                              />
+                            </Box>
+                          ) : (
+                            <Box
+                              w={60}
+                              h={60}
+                              borderRadius="$lg"
+                              bg={warnaGlobal.gray100}
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <Ionicons name="restaurant-outline" size={24} color={warnaGlobal.gray400} />
+                            </Box>
+                          )}
+                          
+                          {/* Review Content */}
+                          <VStack flex={1} space="xs">
+                            <Text
+                              fontSize="$sm"
+                              fontWeight="$bold"
+                              color={warnaGlobal.gray900}
+                              numberOfLines={1}
+                            >
+                              {review.mealName}
+                            </Text>
+                            
+                            {/* Rating Stars */}
+                            <HStack space="xs" alignItems="center">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Ionicons
+                                  key={star}
+                                  name={star <= review.rating ? "star" : "star-outline"}
+                                  size={14}
+                                  color={star <= review.rating ? "#F59E0B" : warnaGlobal.gray300}
+                                />
+                              ))}
+                              <Text fontSize="$xs" color={warnaGlobal.gray500} ml="$1">
+                                ({review.rating}/5)
+                              </Text>
+                            </HStack>
+                            
+                            {/* Review Text */}
+                            {review.review && (
+                              <Text
+                                fontSize="$xs"
+                                color={warnaGlobal.gray600}
+                                numberOfLines={2}
+                              >
+                                "{review.review}"
+                              </Text>
+                            )}
+                            
+                            {/* Meta */}
+                            <HStack justifyContent="space-between" alignItems="center" mt="$1">
+                              <Text fontSize={10} color={warnaGlobal.gray400}>
+                                {review.createdAt?.toDate
+                                  ? new Date(review.createdAt.toDate()).toLocaleDateString("id-ID", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
+                                  : "Baru saja"}
+                              </Text>
+                              <HStack space="xs" alignItems="center">
+                                <Ionicons name="heart" size={12} color={warnaGlobal.primaryHex} />
+                                <Text fontSize={10} color={warnaGlobal.gray500}>{review.likes || 0}</Text>
+                              </HStack>
+                            </HStack>
+                          </VStack>
+                          
+                          {/* Arrow */}
+                          <Box alignSelf="center">
+                            <Ionicons name="chevron-forward" size={20} color={warnaGlobal.gray400} />
+                          </Box>
+                        </HStack>
+                      </Box>
+                    </Pressable>
+                  ))}
+                </VStack>
+              )}
             </Box>
           )}
-
-          {/* FAB Button untuk Buat Artikel */}
-          {activeTab === "artikel" && (
-            <Fab
-              size="lg"
-              placement="bottom right"
-              bg={warnaGlobal.primaryHex}
-              onPress={() => router.push("/artikel/create-artikel")}
-            >
-              <FabIcon as={AddIcon} color="$white" />
-            </Fab>
-          )}
         </VStack>
+        
+        {/* FAB Button untuk Buat Artikel - Di luar Container agar tidak tertutup */}
+        {activeTab === "artikel" && (
+          <Pressable
+            position="absolute"
+            bottom={90}
+            right={16}
+            w={56}
+            h={56}
+            borderRadius="$full"
+            bg={warnaGlobal.primaryHex}
+            alignItems="center"
+            justifyContent="center"
+            shadowColor="$black"
+            shadowOffset={{ width: 0, height: 4 }}
+            shadowOpacity={0.3}
+            shadowRadius={4}
+            elevation={8}
+            zIndex={100}
+            onPress={() => router.push("/artikel/create-artikel")}
+          >
+            <Ionicons name="add" size={28} color="#fff" />
+          </Pressable>
+        )}
       </Container>
       )}
     </Box>

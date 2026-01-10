@@ -37,11 +37,11 @@ export const RecipeCard = ({
     >
       <Box
         w={170}
-        h={220}
-        bg={recipe.bgColor}
+        bg={recipe.bgColor || '$white'}
         borderRadius="$2xl"
         overflow="hidden"
-        position="relative"
+        borderWidth={1}
+        borderColor={warnaGlobal.gray200}
         sx={{
           ':active': {
             opacity: 0.8,
@@ -49,7 +49,7 @@ export const RecipeCard = ({
         }}
       >
         {/* Recipe Image */}
-        <Box alignItems="center" justifyContent="center" h={140} bg="$coolGray100" overflow="hidden">
+        <Box alignItems="center" justifyContent="center" h={130} bg="$coolGray100" overflow="hidden" position="relative">
           {isImageUrl ? (
             <Image
               source={{ uri: recipe.image }}
@@ -63,80 +63,73 @@ export const RecipeCard = ({
           ) : (
             <Text fontSize={64}>{recipe.image || "🍽️"}</Text>
           )}
-        </Box>
-
-        {/* Rating Badge */}
-        <Box position="absolute" top="$3" right="$3">
-          <Badge
-            size="md"
-            variant="solid"
-            borderRadius="$lg"
-            bg={warnaGlobal.amber400}
-          >
-            <HStack space="xs" alignItems="center">
-              <Ionicons name="star" size={12} color="white" />
-              <BadgeText
-                color="$white"
-                fontWeight="$bold"
-                fontSize="$xs"
-              >
-                {recipe.rating}
-              </BadgeText>
-            </HStack>
-          </Badge>
-        </Box>
-
-        {/* Bookmark Icon */}
-        <Pressable
-          position="absolute"
-          bottom="$4"
-          right="$4"
-          onPress={(e) => {
-            e.stopPropagation();
-            onBookmark && onBookmark(recipe.id);
-          }}
-        >
-          <Box
-            bg={isBookmarked ? bookmarkBgColor : warnaGlobal.white}
-            p="$2"
-            borderRadius="$lg"
-            shadowColor="$black"
-            shadowOffset={{ width: 0, height: 2 }}
-            shadowOpacity={0.1}
-            shadowRadius={4}
-          >
-            <Ionicons
-              name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
-              size={13}
-              color={isBookmarked ? bookmarkActiveColor : warnaGlobal.gray500Hex}
-            />
+          
+          {/* Rating Badge */}
+          <Box position="absolute" top="$2" right="$2">
+            <Badge
+              size="md"
+              variant="solid"
+              borderRadius="$lg"
+              bg={warnaGlobal.amber400}
+            >
+              <HStack space="xs" alignItems="center">
+                <Ionicons name="star" size={12} color="white" />
+                <BadgeText
+                  color="$white"
+                  fontWeight="$bold"
+                  fontSize="$xs"
+                >
+                  {recipe.rating}
+                </BadgeText>
+              </HStack>
+            </Badge>
           </Box>
-        </Pressable>
+        </Box>
 
-        {/* Recipe Info */}
-        <VStack
-          space="xs"
-          position="absolute"
-          bottom="$4"
-          left="$4"
-          right="$12"
-        >
+        {/* Recipe Info - Below Image */}
+        <Box p="$3" bg="$white">
           <Text
             fontSize="$sm"
             fontWeight="$bold"
             numberOfLines={2}
             ellipsizeMode="tail"
             lineHeight="$sm"
+            minHeight={36}
           >
             {recipe.name}
           </Text>
-          <Text fontSize="$xs" color={warnaGlobal.gray600} mt="$1">
-            Time
-          </Text>
-          <Text fontSize="$xs" fontWeight="$semibold" numberOfLines={1}>
-            {recipe.time}
-          </Text>
-        </VStack>
+          
+          <HStack justifyContent="space-between" alignItems="center" mt="$2">
+            <VStack>
+              <Text fontSize="$xs" color={warnaGlobal.gray500}>
+                Time
+              </Text>
+              <Text fontSize="$xs" fontWeight="$semibold" numberOfLines={1}>
+                {recipe.time}
+              </Text>
+            </VStack>
+            
+            {/* Bookmark Icon */}
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                onBookmark && onBookmark(recipe.id);
+              }}
+            >
+              <Box
+                bg={isBookmarked ? bookmarkBgColor : warnaGlobal.gray100}
+                p="$2"
+                borderRadius="$lg"
+              >
+                <Ionicons
+                  name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
+                  size={16}
+                  color={isBookmarked ? bookmarkActiveColor : warnaGlobal.gray500Hex}
+                />
+              </Box>
+            </Pressable>
+          </HStack>
+        </Box>
       </Box>
     </Pressable>
   );

@@ -39,14 +39,14 @@ export default function ArtikelDetailScreen() {
     try {
       setLoading(true);
       const result = await getArtikelById(id);
-      console.log('📄 Article loaded:', result.artikel?.title);
-      if (result.success && result.artikel) {
-        setArticle(result.artikel);
-        setLikesCount(result.artikel.likes || 0);
+      console.log('📄 Article loaded:', result.article?.title);
+      if (result.success && result.article) {
+        setArticle(result.article);
+        setLikesCount(result.article.likes || 0);
         // Load author data - FIX: use result.data instead of result.user
-        if (result.artikel.userId) {
-          console.log('👤 Loading author for:', result.artikel.userId);
-          const userResult = await getUserProfile(result.artikel.userId);
+        if (result.article.userId) {
+          console.log('👤 Loading author for:', result.article.userId);
+          const userResult = await getUserProfile(result.article.userId);
           console.log('👤 Author result:', userResult.success, userResult.data?.nama || 'No name');
           if (userResult.success && userResult.data) {
             setAuthor(userResult.data);

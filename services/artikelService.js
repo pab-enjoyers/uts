@@ -105,18 +105,21 @@ export const createArtikel = async (userId, artikelData) => {
  */
 export const getArtikelById = async (articleId) => {
   try {
+    console.log('📄 Getting artikel by ID:', articleId);
     const docRef = doc(db, ARTIKEL_COLLECTION, articleId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
+      console.log('📄 Artikel found:', docSnap.id);
       return {
         success: true,
-        artikel: {
+        article: {
           id: docSnap.id,
           ...docSnap.data(),
         },
       };
     } else {
+      console.log('📄 Artikel not found');
       return {
         success: false,
         error: 'Artikel tidak ditemukan',
