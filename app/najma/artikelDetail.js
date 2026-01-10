@@ -39,14 +39,17 @@ export default function ArtikelDetailScreen() {
     try {
       setLoading(true);
       const result = await getArtikelById(id);
+      console.log('📄 Article loaded:', result.artikel?.title);
       if (result.success && result.artikel) {
         setArticle(result.artikel);
         setLikesCount(result.artikel.likes || 0);
-        // Load author data
+        // Load author data - FIX: use result.data instead of result.user
         if (result.artikel.userId) {
+          console.log('👤 Loading author for:', result.artikel.userId);
           const userResult = await getUserProfile(result.artikel.userId);
-          if (userResult.success) {
-            setAuthor(userResult.user);
+          console.log('👤 Author result:', userResult.success, userResult.data?.nama || 'No name');
+          if (userResult.success && userResult.data) {
+            setAuthor(userResult.data);
           }
         }
         // Increment views
@@ -183,49 +186,44 @@ export default function ArtikelDetailScreen() {
           )}
 
           <VStack space="md" px="$5" mt={article.thumbnail ? "$4" : "$24"}>
-            {/* Author Info - HARUS ADA DI SINI */}
-            {author && (
-              <HStack space="md" alignItems="center" mb="$2">
-                <Avatar size="md" bg={warnaGlobal.primaryHex}>
-                  {author.photoURL ? (
-                    <AvatarImage source={{ uri: author.photoURL }} />
-                  ) : (
-                    <AvatarFallbackText>
-                      {author.nama || author.email || "U"}
-                    </AvatarFallbackText>
-                  )}
-                </Avatar>
-                <VStack>
-                  <Text fontSize="$md" fontWeight="$semibold" color={warnaGlobal.gray900}>
+            {/* Category Badge dan Author Info - INLINE */}
+            <HStack justifyContent="space-between" alignItems="center">
+              {/* Category Badge */}
+              {article.category && (
+                <Badge
+                  size="sm"
+                  variant="solid"
+                  borderRadius="$md"
+                  bg={warnaGlobal.primaryHex}
+                >
+                  <BadgeText
+                    color="$white"
+                    fontSize="$xs"
+                    fontWeight="$medium"
+                  >
+                    {article.category}
+                  </BadgeText>
+                </Badge>
+              )}
+
+              {/* Author Info - KECIL DI KANAN */}
+              {author && (
+                <HStack space="xs" alignItems="center">
+                  <Avatar size="xs" bg={warnaGlobal.primaryHex}>
+                    {author.photoURL ? (
+                      <AvatarImage source={{ uri: author.photoURL }} />
+                    ) : (
+                      <AvatarFallbackText>
+                        {author.nama || author.email || "U"}
+                      </AvatarFallbackText>
+                    )}
+                  </Avatar>
+                  <Text fontSize="$xs" color={warnaGlobal.gray600}>
                     {author.nama || author.email || "Anonymous"}
                   </Text>
-                  {author.status && (
-                    <Text fontSize="$xs" color={warnaGlobal.gray500}>
-                      {author.status}
-                    </Text>
-                  )}
-                </VStack>
-              </HStack>
-            )}
-
-            {/* Category Badge */}
-            {article.category && (
-              <Badge
-                size="sm"
-                variant="solid"
-                borderRadius="$md"
-                bg={warnaGlobal.primaryHex}
-                alignSelf="flex-start"
-              >
-                <BadgeText
-                  color="$white"
-                  fontSize="$xs"
-                  fontWeight="$medium"
-                >
-                  {article.category}
-                </BadgeText>
-              </Badge>
-            )}
+                </HStack>
+              )}
+            </HStack>
 
             {/* Title */}
             <Heading size="2xl" fontWeight="$bold" color={warnaGlobal.gray900} lineHeight={36}>

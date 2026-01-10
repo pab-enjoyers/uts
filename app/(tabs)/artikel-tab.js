@@ -12,6 +12,9 @@ import {
   Spinner,
   Input,
   InputField,
+  InputSlot,
+  InputIcon,
+  SearchIcon,
   Avatar,
   AvatarImage,
   AvatarFallbackText
@@ -45,18 +48,22 @@ export default function ArtikelTab() {
     try {
       setLoading(true);
       const result = await getAllArtikel();
+      console.log('📰 Articles loaded:', result.articles?.length || 0);
       if (result.success && result.articles) {
         setArticles(result.articles);
         // Load author data untuk setiap artikel
         const authors = {};
         for (const article of result.articles) {
           if (article.userId && !authors[article.userId]) {
+            console.log('👤 Loading author for userId:', article.userId);
             const userResult = await getUserProfile(article.userId);
-            if (userResult.success) {
-              authors[article.userId] = userResult.user;
+            console.log('👤 Author result:', userResult.success, userResult.data?.nama || 'No name');
+            if (userResult.success && userResult.data) {
+              authors[article.userId] = userResult.data;
             }
           }
         }
+        console.log('👤 Authors cache:', Object.keys(authors).length, 'authors loaded');
         setAuthorsCache(authors);
       }
     } catch (error) {
@@ -127,6 +134,7 @@ export default function ArtikelTab() {
 
   const renderArticleItem = ({ item }) => {
     const author = authorsCache[item.userId];
+    console.log('Rendering article:', item.id, 'Author:', author?.nama || 'No author loaded');
     return (
     <Pressable
       onPress={() => handlePressArticle(item.id)}
@@ -169,43 +177,42 @@ export default function ArtikelTab() {
 
         {/* Content */}
         <Box p="$4">
-          {/* Author Info */}
-          {author && (
-            <HStack space="sm" alignItems="center" mb="$3">
-              <Avatar size="sm" bg={warnaGlobal.primaryHex}>
-                {author.photoURL ? (
+          {/* Category Badge dan Author Info - INLINE */}
+          <HStack justifyContent="space-between" alignItems="center" mb="$2">
+            {/* Category Badge */}
+            {item.category && (
+              <Badge
+                size="sm"
+                variant="solid"
+                borderRadius="$md"
+                bg={warnaGlobal.primaryHex}
+              >
+                <BadgeText
+                  color="$white"
+                  fontSize="$xs"
+                  fontWeight="$medium"
+                >
+                  {item.category}
+                </BadgeText>
+              </Badge>
+            )}
+
+            {/* Author Info - KECIL DI KANAN */}
+            <HStack space="xs" alignItems="center">
+              <Avatar size="xs" bg={warnaGlobal.primaryHex}>
+                {author?.photoURL ? (
                   <AvatarImage source={{ uri: author.photoURL }} />
                 ) : (
                   <AvatarFallbackText>
-                    {author.nama || author.email || "U"}
+                    {author?.nama || author?.email || "U"}
                   </AvatarFallbackText>
                 )}
               </Avatar>
-              <Text fontSize="$sm" fontWeight="$medium" color={warnaGlobal.gray700}>
-                {author.nama || author.email || "Anonymous"}
+              <Text fontSize="$xs" color={warnaGlobal.gray600}>
+                {author?.nama || author?.email || "..."}
               </Text>
             </HStack>
-          )}
-
-          {/* Category Badge */}
-          {item.category && (
-            <Badge
-              size="sm"
-              variant="solid"
-              borderRadius="$md"
-              bg={warnaGlobal.primaryHex}
-              mb="$2"
-              alignSelf="flex-start"
-            >
-              <BadgeText
-                color="$white"
-                fontSize="$xs"
-                fontWeight="$medium"
-              >
-                {item.category}
-              </BadgeText>
-            </Badge>
-          )}
+          </HStack>
 
           {/* Title */}
           <Text
@@ -278,34 +285,35 @@ export default function ArtikelTab() {
 
   return (
     <Box flex={1} bg="$white">
-      {/* Search Bar */}
-      <Box pt="$12" pb="$3" px="$5" bg="$white">
+      {/* Search Bar - Sama seperti Dashboard */}
+      <Box pt="$10" pb="$2" px="$5" bg="$white">
         <Input
           variant="outline"
           size="lg"
           borderRadius="$xl"
           bg={warnaGlobal.gray50}
-          borderColor={warnaGlobal.gray300}
         >
-          <Box ml="$3">
-            <Ionicons
-              name="search"
-              size={20}
-              color={warnaGlobal.gray500}
-            />
-          </Box>
+          <InputSlot pl="$4">
+            <InputIcon as={SearchIcon} color="$coolGray400" />
+          </InputSlot>
           <InputField
             placeholder="Cari artikel..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            pl="$2"
           />
+          {searchQuery.length > 0 && (
+            <InputSlot pr="$3">
+              <Pressable onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-circle" size={20} color="#9ca3af" />
+              </Pressable>
+            </InputSlot>
+          )}
         </Input>
       </Box>
 
       {/* Content */}
       <Container>
-        <VStack space="md" pt="$2" pb="$24">
+        <VStack space="sm" pt="$1" pb="$24">
           {/* Kategori Filter */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <HStack space="sm">
