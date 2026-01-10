@@ -604,7 +604,7 @@ export default function RecipeDetailScreen() {
               </HStack>
 
               {/* Rating buttons */}
-              {user && (
+              {/* {user && (
                 <Box>
                   <Text fontSize="$xs" color={warnaGlobal.gray600} mb="$2">
                     Berikan rating:
@@ -621,7 +621,7 @@ export default function RecipeDetailScreen() {
                     ))}
                   </HStack>
                 </Box>
-              )}
+              )} */}
 
               {/* Author info - DATA API */}
               <HStack space="sm" alignItems="center">

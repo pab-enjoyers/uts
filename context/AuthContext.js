@@ -8,7 +8,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  updatePassword as firebaseUpdatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig';
 import { 
@@ -216,6 +219,45 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Update password user
+   * @param {string} currentPassword - Password saat ini
+   * @param {string} newPassword - Password baru
+   */
+  const updateUserPassword = async (currentPassword, newPassword) => {
+    try {
+      if (!auth.currentUser) {
+        return {
+          success: false,
+          error: 'User tidak ditemukan'
+        };
+      }
+
+      // Re-authenticate user first
+      const credential = EmailAuthProvider.credential(
+        auth.currentUser.email,
+        currentPassword
+      );
+      
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      
+      // Update password
+      await firebaseUpdatePassword(auth.currentUser, newPassword);
+      
+      return {
+        success: true,
+        message: 'Password berhasil diubah'
+      };
+    } catch (error) {
+      const errorInfo = handleFirebaseError(error);
+      console.error('Error updating password:', errorInfo);
+      return {
+        success: false,
+        error: errorInfo.message
+      };
+    }
+  };
+
   // Context value
   const value = {
     user,
@@ -227,6 +269,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     checkAuthStatus,
+    updateUserPassword,
   };
 
   return (

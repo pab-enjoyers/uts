@@ -242,9 +242,9 @@ export default function BookmarkTab() {
         <VStack space="lg" px="$5" py="$6" pb="$24">
           {/* Header */}
           <VStack space="sm">
-            <Heading size="2xl" fontWeight="$bold">
+            {/* <Heading size="2xl" fontWeight="$bold">
               Resep Tersimpan
-            </Heading>
+            </Heading> */}
             <HStack alignItems="center" space="xs">
               <Ionicons name="bookmark" size={16} color={warnaGlobal.primary} />
               <Text color={warnaGlobal.gray600} fontSize="$sm">

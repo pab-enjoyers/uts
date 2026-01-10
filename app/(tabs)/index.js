@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ScrollView as RNScrollView, Image, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { ScrollView as RNScrollView, Image, ActivityIndicator, Alert, RefreshControl, Modal } from "react-native";
 import {
   Container,
   warnaGlobal,
@@ -53,6 +53,7 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [categories, setCategories] = useState([{ id: 0, name: "All" }]);
   const [sortBy, setSortBy] = useState("default"); // default, name-asc, name-desc, time-asc
+  const [showFilterModal, setShowFilterModal] = useState(false);
   
   // API Data states
   const [featuredMeals, setFeaturedMeals] = useState([]);
@@ -525,7 +526,7 @@ export default function HomePage() {
                   ) : null}
                 </Input>
               </Box>
-              <Pressable onPress={() => router.push("/ingredient-search")}>
+              <Pressable onPress={() => setShowFilterModal(true)}>
                 <Box
                   bg={warnaGlobal.primary}
                   p="$3"
@@ -534,50 +535,27 @@ export default function HomePage() {
                   h={48}
                   justifyContent="center"
                   alignItems="center"
+                  position="relative"
                 >
                   <Ionicons 
-                    name="nutrition-outline" 
+                    name="options-outline" 
                     size={24} 
                     color="white" 
                   />
+                  {(sortBy !== "default" || selectedCategory !== "All") && (
+                    <Box
+                      position="absolute"
+                      top={8}
+                      right={8}
+                      w={8}
+                      h={8}
+                      borderRadius="$full"
+                      bg="$amber400"
+                    />
+                  )}
                 </Box>
               </Pressable>
             </HStack>
-
-            {/* Sort Options */}
-            {(searchQuery.length > 0 || selectedCategory !== "All") && (
-              <HStack space="sm" mt="$3" flexWrap="wrap">
-                <Text fontSize="$sm" color={warnaGlobal.gray600} alignSelf="center" mr="$2">
-                  Urutkan:
-                </Text>
-                {[
-                  { value: "default", label: "Default" },
-                  { value: "name-asc", label: "A-Z" },
-                  { value: "name-desc", label: "Z-A" },
-                  { value: "time-asc", label: "Waktu ↑" },
-                ].map((option) => (
-                  <Pressable
-                    key={option.value}
-                    onPress={() => setSortBy(option.value)}
-                  >
-                    <Box
-                      px="$3"
-                      py="$1.5"
-                      borderRadius="$lg"
-                      bg={sortBy === option.value ? warnaGlobal.primary : "$coolGray100"}
-                    >
-                      <Text
-                        fontSize="$xs"
-                        fontWeight="$medium"
-                        color={sortBy === option.value ? "$white" : warnaGlobal.gray600}
-                      >
-                        {option.label}
-                      </Text>
-                    </Box>
-                  </Pressable>
-                ))}
-              </HStack>
-            )}
           </Box>
 
           {/* Show search results or normal view */}
@@ -740,6 +718,175 @@ export default function HomePage() {
           </Box>
         </VStack>
       </RNScrollView>
+
+      {/* Filter Modal */}
+      <Modal
+        visible={showFilterModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <Pressable 
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onPress={() => setShowFilterModal(false)}
+        >
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <Box
+              position="absolute"
+              bottom={0}
+              left={0}
+              right={0}
+              bg="$white"
+              borderTopLeftRadius="$3xl"
+              borderTopRightRadius="$3xl"
+              p="$5"
+              pb="$8"
+            >
+              {/* Header */}
+              <HStack justifyContent="space-between" alignItems="center" mb="$4">
+                <Heading size="lg" fontWeight="$bold">
+                  Filter & Urutkan
+                </Heading>
+                <Pressable onPress={() => setShowFilterModal(false)}>
+                  <Ionicons name="close" size={28} color="#000" />
+                </Pressable>
+              </HStack>
+
+              {/* Kategori Section */}
+              <VStack space="md" mb="$5">
+                <Text fontSize="$md" fontWeight="$semibold" color={warnaGlobal.gray700}>
+                  Kategori
+                </Text>
+                <RNScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <HStack space="sm">
+                    {categories.map((cat) => (
+                      <Pressable
+                        key={cat.id}
+                        onPress={() => {
+                          setSelectedCategory(cat.name);
+                          loadCategoryMeals(cat.name);
+                        }}
+                      >
+                        <Box
+                          px="$4"
+                          py="$2"
+                          borderRadius="$full"
+                          bg={selectedCategory === cat.name ? warnaGlobal.primary : warnaGlobal.gray100}
+                          borderWidth={1}
+                          borderColor={selectedCategory === cat.name ? warnaGlobal.primary : warnaGlobal.gray200}
+                        >
+                          <Text
+                            fontSize="$sm"
+                            fontWeight="$medium"
+                            color={selectedCategory === cat.name ? "$white" : warnaGlobal.gray700}
+                          >
+                            {cat.name}
+                          </Text>
+                        </Box>
+                      </Pressable>
+                    ))}
+                  </HStack>
+                </RNScrollView>
+              </VStack>
+
+              {/* Urutkan Section */}
+              <VStack space="md" mb="$5">
+                <Text fontSize="$md" fontWeight="$semibold" color={warnaGlobal.gray700}>
+                  Urutkan Berdasarkan
+                </Text>
+                <VStack space="sm">
+                  {[
+                    { value: "default", label: "Default", icon: "list-outline" },
+                    { value: "name-asc", label: "Nama (A-Z)", icon: "text-outline" },
+                    { value: "name-desc", label: "Nama (Z-A)", icon: "text-outline" },
+                    { value: "time-asc", label: "Waktu Tercepat", icon: "time-outline" },
+                  ].map((option) => (
+                    <Pressable
+                      key={option.value}
+                      onPress={() => setSortBy(option.value)}
+                    >
+                      <HStack
+                        px="$4"
+                        py="$3"
+                        borderRadius="$xl"
+                        bg={sortBy === option.value ? warnaGlobal.light : "$white"}
+                        borderWidth={1}
+                        borderColor={sortBy === option.value ? warnaGlobal.primary : warnaGlobal.gray200}
+                        alignItems="center"
+                        space="md"
+                      >
+                        <Box
+                          w={40}
+                          h={40}
+                          borderRadius="$full"
+                          bg={sortBy === option.value ? warnaGlobal.primary : warnaGlobal.gray100}
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <Ionicons
+                            name={option.icon}
+                            size={20}
+                            color={sortBy === option.value ? "#fff" : "#6b7280"}
+                          />
+                        </Box>
+                        <Text
+                          flex={1}
+                          fontSize="$sm"
+                          fontWeight="$medium"
+                          color={sortBy === option.value ? warnaGlobal.primary : warnaGlobal.gray700}
+                        >
+                          {option.label}
+                        </Text>
+                        {sortBy === option.value && (
+                          <Ionicons name="checkmark-circle" size={24} color={warnaGlobal.primaryHex} />
+                        )}
+                      </HStack>
+                    </Pressable>
+                  ))}
+                </VStack>
+              </VStack>
+
+              {/* Action Buttons */}
+              <HStack space="md">
+                <Pressable
+                  flex={1}
+                  onPress={() => {
+                    setSortBy("default");
+                    setSelectedCategory("All");
+                  }}
+                >
+                  <Box
+                    py="$3"
+                    borderRadius="$xl"
+                    borderWidth={1}
+                    borderColor={warnaGlobal.gray300}
+                    alignItems="center"
+                  >
+                    <Text fontSize="$sm" fontWeight="$semibold" color={warnaGlobal.gray700}>
+                      Reset
+                    </Text>
+                  </Box>
+                </Pressable>
+                <Pressable
+                  flex={1}
+                  onPress={() => setShowFilterModal(false)}
+                >
+                  <Box
+                    py="$3"
+                    borderRadius="$xl"
+                    bg={warnaGlobal.primary}
+                    alignItems="center"
+                  >
+                    <Text fontSize="$sm" fontWeight="$semibold" color="$white">
+                      Terapkan
+                    </Text>
+                  </Box>
+                </Pressable>
+              </HStack>
+            </Box>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Container>
   );
 }

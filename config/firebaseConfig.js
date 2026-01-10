@@ -6,6 +6,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // TODO: Ganti dengan Firebase credentials dari Firebase Console
@@ -30,6 +31,7 @@ const firebaseConfig = {
 let app;
 let auth;
 let db;
+let storage;
 
 try {
   app = initializeApp(firebaseConfig);
@@ -42,20 +44,25 @@ try {
   // Initialize Firestore
   db = getFirestore(app);
   
+  // Initialize Storage
+  storage = getStorage(app);
+  
   console.log('✅ Firebase initialized successfully');
 } catch (error) {
   // Handle case where app is already initialized
   if (error.code === 'app/duplicate-app') {
     console.log('⚠️ Firebase app already initialized');
     const { getApp } = require('firebase/app');
+    const { getStorage: getStorageInstance } = require('firebase/storage');
     app = getApp();
     auth = getAuth(app);
     db = getFirestore(app);
+    storage = getStorageInstance(app);
   } else {
     console.error('❌ Firebase initialization error:', error);
     throw error;
   }
 }
 
-export { auth, db };
+export { auth, db, storage };
 export default app;

@@ -60,7 +60,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="bookmark-tab"
         options={{
-          title: "Disimpan",
+          title: "Resep Tersimpan",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
             <Box alignItems="center" gap="$1">

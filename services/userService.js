@@ -17,7 +17,8 @@ import {
   addDoc,
   Timestamp
 } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../config/firebaseConfig';
 import { handleFirebaseError } from '../utils/errorHandler';
 
 // Collection name
@@ -108,6 +109,44 @@ export const updateUserProfile = async (uid, updates) => {
   } catch (error) {
     const errorInfo = handleFirebaseError(error);
     console.error('Error updating user profile:', errorInfo);
+    return {
+      success: false,
+      error: errorInfo.message
+    };
+  }
+};
+
+/**
+ * Upload profile photo ke Firebase Storage
+ * @param {string} uid - User ID
+ * @param {string} imageUri - Local image URI
+ */
+export const uploadProfilePhoto = async (uid, imageUri) => {
+  try {
+    // Convert image URI to blob
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    
+    // Create reference to storage
+    const filename = `profile_${uid}_${Date.now()}.jpg`;
+    const storageRef = ref(storage, `profile_photos/${filename}`);
+    
+    // Upload file
+    await uploadBytes(storageRef, blob);
+    
+    // Get download URL
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    // Update user profile with photo URL
+    await updateUserProfile(uid, { photoURL: downloadURL });
+    
+    return {
+      success: true,
+      photoURL: downloadURL
+    };
+  } catch (error) {
+    const errorInfo = handleFirebaseError(error);
+    console.error('Error uploading profile photo:', errorInfo);
     return {
       success: false,
       error: errorInfo.message
