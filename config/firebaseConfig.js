@@ -1,21 +1,9 @@
-// ========================================
-// 🔥 FIREBASE CONFIGURATION
-// Setup Firebase untuk Authentication dan Firestore
-// ========================================
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// TODO: Ganti dengan Firebase credentials dari Firebase Console
-// Cara mendapatkan config:
-// 1. Buka https://console.firebase.google.com/
-// 2. Pilih project atau buat project baru
-// 3. Klik Project Settings (gear icon)
-// 4. Scroll ke bawah, pilih "Web app" atau add app
-// 5. Copy firebaseConfig object
 
 const firebaseConfig = {
   apiKey: "AIzaSyB2UDGq1gS8uzULVs9Ve1K4uVIo0QwHdDk",
