@@ -624,7 +624,7 @@ export default function RecipeDetailScreen() {
               )} */}
 
               {/* Author info - DATA API */}
-              <HStack space="sm" alignItems="center">
+              {/* <HStack space="sm" alignItems="center">
                 <Box
                   bg={warnaGlobal.light}
                   w={40}
@@ -663,7 +663,7 @@ export default function RecipeDetailScreen() {
                     {isFollowing ? "Diikuti" : "Ikuti"}
                   </Text>
                 </Pressable>
-              </HStack>
+              </HStack> */}
 
               {/* Tab Switcher - UI LAMA ANGELA */}
               <HStack space="md" mt="$2">

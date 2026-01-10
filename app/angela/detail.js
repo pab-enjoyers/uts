@@ -260,7 +260,7 @@ export default function RecipeDetail() {
               </HStack>
 
               {/* Author info */}
-              <HStack space="sm" alignItems="center">
+              {/* <HStack space="sm" alignItems="center">
                 <Box
                   bg={warnaGlobal.light}
                   w={40}
@@ -300,7 +300,7 @@ export default function RecipeDetail() {
                     {isFollowing ? "Diikuti" : "Ikuti"}
                   </Text>
                 </Pressable>
-              </HStack>
+              </HStack> */}
 
               {/* Tab Switcher - Bahan / Prosedur */}
               <HStack space="md" mt="$2">
