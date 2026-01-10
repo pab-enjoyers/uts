@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, VStack, Text, Pressable, Badge, BadgeText, HStack } from '@gluestack-ui/themed';
+import { Box, VStack, Text, Pressable, Badge, BadgeText, HStack, Image } from '@gluestack-ui/themed';
 import { Ionicons } from '@expo/vector-icons';
 import { warnaGlobal } from '../theme';
 
@@ -23,6 +23,9 @@ export const RecipeCard = ({
   bookmarkBgColor = warnaGlobal.lightHex,
   bookmarkActiveColor = warnaGlobal.primaryHex
 }) => {
+  // Check if image is URL or emoji
+  const isImageUrl = recipe.image && (recipe.image.startsWith('http') || recipe.image.startsWith('https'));
+  
   return (
     <Pressable
       onPress={onPress}
@@ -37,7 +40,7 @@ export const RecipeCard = ({
         h={220}
         bg={recipe.bgColor}
         borderRadius="$2xl"
-        p="$4"
+        overflow="hidden"
         position="relative"
         sx={{
           ':active': {
@@ -45,9 +48,19 @@ export const RecipeCard = ({
           },
         }}
       >
-        {/* Recipe Image/Icon */}
-        <Box alignItems="center" mb="$3" mt="$2">
-          <Text fontSize={64}>{recipe.image}</Text>
+        {/* Recipe Image */}
+        <Box alignItems="center" justifyContent="center" h={140} bg="$coolGray100">
+          {isImageUrl ? (
+            <Image
+              source={{ uri: recipe.image }}
+              alt={recipe.name}
+              w="100%"
+              h="100%"
+              resizeMode="cover"
+            />
+          ) : (
+            <Text fontSize={64}>{recipe.image || "🍽️"}</Text>
+          )}
         </Box>
 
         {/* Rating Badge */}
