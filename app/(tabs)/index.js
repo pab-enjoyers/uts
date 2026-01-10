@@ -733,6 +733,7 @@ export default function HomePage() {
         visible={showFilterModal}
         animationType="slide"
         transparent={true}
+        statusBarTranslucent={true}
         onRequestClose={() => setShowFilterModal(false)}
       >
         <TouchableWithoutFeedback onPress={() => setShowFilterModal(false)}>
@@ -743,7 +744,7 @@ export default function HomePage() {
                 borderTopLeftRadius="$3xl"
                 borderTopRightRadius="$3xl"
                 p="$5"
-                pb="$8"
+                pb="$10"
               >
               {/* Header */}
               <HStack justifyContent="space-between" alignItems="center" mb="$4">
