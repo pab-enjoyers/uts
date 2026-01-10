@@ -17,6 +17,7 @@ import {
   getRandomMeals,
   listAllCategories,
   filterByCategory,
+  estimateCookingTime,
 } from "../../services/mealService";
 import {
   addBookmark,
@@ -104,13 +105,13 @@ export default function HomePage() {
       // Fetch random meals untuk featured & popular
       const randomResult = await getRandomMeals(15);
       if (randomResult.success && randomResult.meals) {
-        // Convert API format ke format lokal
+        // Convert API format ke format lokal dengan estimasi waktu
         const meals = randomResult.meals.map((meal) => ({
           id: meal.idMeal,
           name: meal.strMeal,
           image: meal.strMealThumb || "🍽️",
           rating: (Math.random() * 2 + 3).toFixed(1), // Random 3-5
-          time: `${Math.floor(Math.random() * 30 + 15)} Mins`,
+          time: estimateCookingTime(meal), // Estimasi dari ingredients + instructions
           bgColor: "$coolGray100",
           category: meal.strCategory,
           area: meal.strArea,
@@ -178,7 +179,7 @@ export default function HomePage() {
           name: meal.strMeal,
           image: meal.strMealThumb || "🍽️",
           rating: (Math.random() * 2 + 3).toFixed(1),
-          time: `${Math.floor(Math.random() * 30 + 15)} Mins`,
+          time: estimateCookingTime(meal), // Estimasi dari complexity
           bgColor: "$coolGray100",
           category: meal.strCategory,
           area: meal.strArea,
@@ -217,7 +218,7 @@ export default function HomePage() {
           name: meal.strMeal,
           image: meal.strMealThumb || "🍽️",
           rating: (Math.random() * 2 + 3).toFixed(1),
-          time: `${Math.floor(Math.random() * 30 + 15)} Mins`,
+          time: estimateCookingTime(meal), // Estimasi dari complexity
           bgColor: "$coolGray100",
           category: categoryName,
           area: meal.strArea || "",
@@ -507,7 +508,7 @@ export default function HomePage() {
           {/* Popular Recipes Section - Vertical List */}
           <Box px="$5">
             <Heading size="md" mb="$3" fontWeight="$bold">
-              Resep Terpopuler
+              Rekomendasi Resep
               {selectedCategory !== "All" && (
                 <Text
                   fontSize="$sm"

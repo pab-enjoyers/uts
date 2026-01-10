@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, VStack, HStack, Text, Pressable } from '@gluestack-ui/themed';
+import { Box, VStack, HStack, Text, Pressable, Image } from '@gluestack-ui/themed';
 import { Ionicons } from '@expo/vector-icons';
 import { warnaGlobal } from '../theme';
 
@@ -35,19 +35,32 @@ export const RecipeListItem = ({ recipe, onPress }) => {
       >
         {/* Recipe Image */}
         <Box
-          bg={warnaGlobal.gray800}
+          bg={warnaGlobal.gray200}
           borderRadius="$xl"
           w={70}
           h={70}
           justifyContent="center"
           alignItems="center"
+          overflow="hidden"
         >
-          <Text fontSize={36}>{recipe.image}</Text>
+          {recipe.image && (recipe.image.startsWith('http') || recipe.image.startsWith('https')) ? (
+            <Image
+              source={{ uri: recipe.image }}
+              alt={recipe.name}
+              style={{
+                width: 70,
+                height: 70,
+                resizeMode: 'cover'
+              }}
+            />
+          ) : (
+            <Text fontSize={36}>{recipe.image || '🍽️'}</Text>
+          )}
         </Box>
 
         {/* Recipe Info */}
         <VStack flex={1} space="xs">
-          <Text fontSize="$sm" fontWeight="$bold" numberOfLines={1}>
+          <Text fontSize="$sm" fontWeight="$bold" numberOfLines={2} ellipsizeMode="tail" lineHeight="$sm">
             {recipe.name}
           </Text>
           

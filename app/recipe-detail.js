@@ -5,7 +5,7 @@
 // ========================================
 
 import React, { useState, useEffect } from "react";
-import { Alert, Linking, Share } from "react-native";
+import { Alert, Linking, Share, Image } from "react-native";
 import { Container, warnaGlobal, IconButton, ShareModal } from "../styles";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -16,6 +16,7 @@ import {
   getMealById,
   parseIngredients,
   hasVideo,
+  estimateCookingTime,
 } from "../services/mealService";
 import {
   addBookmark,
@@ -31,6 +32,7 @@ import {
   Text,
   Pressable,
   Spinner,
+  Image as GluestackImage,
 } from "@gluestack-ui/themed";
 
 export default function RecipeDetailScreen() {
@@ -102,7 +104,10 @@ export default function RecipeDetailScreen() {
         setIsSaved(result.isBookmarked); // Gunakan isSaved, bukan isBookmarked
       }
     } catch (error) {
-      console.error("Error checking bookmark:", error);
+      // Silent fail - jangan alert jika offline
+      console.log("Bookmark check skipped (offline or error):", error.message);
+      // Default ke false jika offline
+      setIsSaved(false);
     }
   };
 
@@ -171,7 +176,7 @@ export default function RecipeDetailScreen() {
         name: meal.strMeal,
         image: meal.strMealThumb, // URL gambar dari API
         rating: "4.5",
-        time: "35 menit",
+        time: estimateCookingTime(meal), // Estimasi dari ingredients + instructions
         category: meal.strCategory,
         area: meal.strArea,
       }
@@ -230,79 +235,91 @@ export default function RecipeDetailScreen() {
           <VStack space="md" mt="$12">
             {/* Header dengan gambar resep - GUNAKAN URL API */}
             <Box position="relative">
-              <Box
-                bg={warnaGlobal.gray100}
-                h={250}
-                justifyContent="center"
-                alignItems="center"
-                position="relative"
-              >
-                {/* Gambar dari API */}
+              {/* Gambar dari API */}
+              <Image
+                source={{ uri: recipe.image }}
+                style={{
+                  width: '100%',
+                  height: 250,
+                  resizeMode: 'cover',
+                  backgroundColor: '#f3f4f6'
+                }}
+              />
+
+              {/* Back button overlay */}
+              <IconButton
+                icon={
+                  <Ionicons
+                    name="arrow-back-outline"
+                    size={20}
+                    color="gray"
+                  />
+                }
+                onPress={() => router.back()}
+                position={{ top: "$4", left: "$4" }}
+              />
+
+              {/* More options button */}
+              <IconButton
+                icon={
+                  <Ionicons
+                    name="ellipsis-horizontal"
+                    size={20}
+                    color="gray"
+                  />
+                }
+                onPress={() => setShowMenu(!showMenu)}
+                position={{ top: "$4", right: "$4" }}
+              />
+
+              {/* Dropdown Menu */}
+              {showMenu && (
                 <Box
-                  w="100%"
-                  h="100%"
-                  bg={warnaGlobal.gray200}
-                  justifyContent="center"
-                  alignItems="center"
+                  position="absolute"
+                  top={60}
+                  right={16}
+                  bg={warnaGlobal.white}
+                  borderRadius="$xl"
+                  py="$3"
+                  px="$2"
+                  minWidth={160}
+                  shadowColor="$black"
+                  shadowOffset={{ width: 0, height: 2 }}
+                  shadowOpacity={0.1}
+                  shadowRadius={12}
+                  elevation={999}
+                  zIndex={9999}
                 >
-                  <Text fontSize={100}>🍽️</Text>
-                  <Text
-                    position="absolute"
-                    fontSize="$xs"
-                    color={warnaGlobal.gray500}
-                  >
-                    Image: {recipe.image?.substring(0, 50)}...
-                  </Text>
-                </Box>
+                  <VStack space="xs">
+                    <Pressable
+                      onPress={() => {
+                        setShowShareModal(true);
+                        setShowMenu(false);
+                      }}
+                      py="$2"
+                      px="$3"
+                      borderRadius="$md"
+                    >
+                      <HStack space="sm" alignItems="center">
+                        <Ionicons
+                          name="share-outline"
+                          size={22}
+                          color="#000000"
+                        />
+                        <Text
+                          fontSize="$sm"
+                          color="$black"
+                          fontWeight="$normal"
+                        >
+                          share
+                        </Text>
+                      </HStack>
+                    </Pressable>
 
-                {/* Back button overlay */}
-                <IconButton
-                  icon={
-                    <Ionicons
-                      name="arrow-back-outline"
-                      size={20}
-                      color="gray"
-                    />
-                  }
-                  onPress={() => router.back()}
-                  position={{ top: "$4", left: "$4" }}
-                />
-
-                {/* More options button */}
-                <IconButton
-                  icon={
-                    <Ionicons
-                      name="ellipsis-horizontal"
-                      size={20}
-                      color="gray"
-                    />
-                  }
-                  onPress={() => setShowMenu(!showMenu)}
-                  position={{ top: "$4", right: "$4" }}
-                />
-
-                {/* Dropdown Menu */}
-                {showMenu && (
-                  <Box
-                    position="absolute"
-                    top={60}
-                    right={16}
-                    bg={warnaGlobal.white}
-                    borderRadius="$xl"
-                    py="$3"
-                    px="$2"
-                    minWidth={160}
-                    shadowColor="$black"
-                    shadowOffset={{ width: 0, height: 2 }}
-                    shadowOpacity={0.1}
-                    shadowRadius={12}
-                    elevation={999}
-                    zIndex={9999}
-                  >
-                    <VStack space="xs">
+                    {hasVideo(meal) && (
                       <Pressable
                         onPress={() => {
-                          setShowShareModal(true);
+                          handleWatchVideo();
                           setShowMenu(false);
                         }}
                         py="$2"
@@ -311,7 +328,7 @@ export default function RecipeDetailScreen() {
                       >
                         <HStack space="sm" alignItems="center">
                           <Ionicons
-                            name="share-outline"
+                            name="play-circle-outline"
                             size={22}
                             color="#000000"
                           />
@@ -320,94 +337,67 @@ export default function RecipeDetailScreen() {
                             color="$black"
                             fontWeight="$normal"
                           >
-                            share
+                            Tonton Video
                           </Text>
                         </HStack>
                       </Pressable>
+                    )}
 
-                      {hasVideo(meal) && (
-                        <Pressable
-                          onPress={() => {
-                            handleWatchVideo();
-                            setShowMenu(false);
-                          }}
-                          py="$2"
-                          px="$3"
-                          borderRadius="$md"
-                        >
-                          <HStack space="sm" alignItems="center">
-                            <Ionicons
-                              name="play-circle-outline"
-                              size={22}
-                              color="#000000"
-                            />
-                            <Text
-                              fontSize="$sm"
-                              color="$black"
-                              fontWeight="$normal"
-                            >
-                              Tonton Video
-                            </Text>
-                          </HStack>
-                        </Pressable>
-                      )}
-
-                      <Pressable
-                        onPress={() => {
-                          toggleBookmark();
-                          setShowMenu(false);
-                        }}
-                        py="$2"
-                        px="$3"
-                        borderRadius="$md"
-                        isDisabled={bookmarkLoading}
-                      >
-                        <HStack space="sm" alignItems="center">
-                          {bookmarkLoading ? (
-                            <Spinner size="small" />
-                          ) : (
-                            <Ionicons
-                              name={isSaved ? "bookmark" : "bookmark-outline"}
-                              size={22}
-                              color="#000000"
-                            />
-                          )}
-                          <Text
-                            fontSize="$sm"
-                            color="$black"
-                            fontWeight="$normal"
-                          >
-                            {isSaved ? "Tersimpan" : "Simpan"}
-                          </Text>
-                        </HStack>
-                      </Pressable>
-                    </VStack>
-                  </Box>
-                )}
-
-                {/* Time badge - GUNAKAN DATA API */}
-                <Box
-                  position="absolute"
-                  bottom="$4"
-                  right="$4"
-                  bg={warnaGlobal.light}
-                  borderRadius="$full"
-                  px="$3"
-                  py="$2"
-                >
-                  <HStack space="xs" alignItems="center">
-                    <Text color={warnaGlobal.primary} fontSize="$xs">
-                      <Ionicons name="timer-outline" size={15} color="red" />
-                    </Text>
-                    <Text
-                      color={warnaGlobal.primary}
-                      fontSize="$xs"
-                      fontWeight="$semibold"
+                    <Pressable
+                      onPress={() => {
+                        toggleBookmark();
+                        setShowMenu(false);
+                      }}
+                      py="$2"
+                      px="$3"
+                      borderRadius="$md"
+                      isDisabled={bookmarkLoading}
                     >
-                      {recipe.time}
-                    </Text>
-                  </HStack>
+                      <HStack space="sm" alignItems="center">
+                        {bookmarkLoading ? (
+                          <Spinner size="small" />
+                        ) : (
+                          <Ionicons
+                            name={isSaved ? "bookmark" : "bookmark-outline"}
+                            size={22}
+                            color="#000000"
+                          />
+                        )}
+                        <Text
+                          fontSize="$sm"
+                          color="$black"
+                          fontWeight="$normal"
+                        >
+                          {isSaved ? "Tersimpan" : "Simpan"}
+                        </Text>
+                      </HStack>
+                    </Pressable>
+                  </VStack>
                 </Box>
+              )}
+
+              {/* Time badge - GUNAKAN DATA API */}
+              <Box
+                position="absolute"
+                bottom="$4"
+                right="$4"
+                bg={warnaGlobal.light}
+                borderRadius="$full"
+                px="$3"
+                py="$2"
+              >
+                <HStack space="xs" alignItems="center">
+                  <Text color={warnaGlobal.primary} fontSize="$xs">
+                    <Ionicons name="timer-outline" size={15} color="red" />
+                  </Text>
+                  <Text
+                    color={warnaGlobal.primary}
+                    fontSize="$xs"
+                    fontWeight="$semibold"
+                  >
+                    {recipe.time}
+                  </Text>
+                </HStack>
               </Box>
             </Box>
 
@@ -519,7 +509,7 @@ export default function RecipeDetailScreen() {
 
               {/* Content based on active tab - DATA API */}
               {activeTab === "bahan" ? (
-                // Bahan List View - DATA DARI API
+                // Bahan List View - DATA DARI API (GANTI EMOJI DENGAN ANGKA)
                 <VStack space="sm" mt="$4" pb="$6">
                   {ingredients.map((item, index) => (
                     <HStack
@@ -531,21 +521,27 @@ export default function RecipeDetailScreen() {
                       alignItems="center"
                     >
                       <Box
-                        bg={warnaGlobal.white}
-                        w={50}
-                        h={50}
-                        borderRadius="$lg"
+                        bg={warnaGlobal.primary}
+                        w={32}
+                        h={32}
+                        borderRadius="$full"
                         justifyContent="center"
                         alignItems="center"
                       >
-                        <Text fontSize={28}>🥘</Text>
+                        <Text
+                          color={warnaGlobal.white}
+                          fontSize="$sm"
+                          fontWeight="$bold"
+                        >
+                          {index + 1}
+                        </Text>
                       </Box>
                       <VStack flex={1}>
                         <Text fontSize="$sm" fontWeight="$semibold">
                           {item.ingredient}
                         </Text>
                       </VStack>
-                      <Text fontSize="$sm" color={warnaGlobal.gray500}>
+                      <Text fontSize="$sm" color={warnaGlobal.gray500} fontWeight="$semibold">
                         {item.measure}
                       </Text>
                     </HStack>

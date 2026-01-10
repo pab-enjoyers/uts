@@ -49,14 +49,16 @@ export const RecipeCard = ({
         }}
       >
         {/* Recipe Image */}
-        <Box alignItems="center" justifyContent="center" h={140} bg="$coolGray100">
+        <Box alignItems="center" justifyContent="center" h={140} bg="$coolGray100" overflow="hidden">
           {isImageUrl ? (
             <Image
               source={{ uri: recipe.image }}
               alt={recipe.name}
-              w="100%"
-              h="100%"
-              resizeMode="cover"
+              style={{
+                width: '100%',
+                height: '100%',
+                resizeMode: 'cover'
+              }}
             />
           ) : (
             <Text fontSize={64}>{recipe.image || "🍽️"}</Text>
@@ -123,14 +125,15 @@ export const RecipeCard = ({
             fontSize="$sm"
             fontWeight="$bold"
             numberOfLines={2}
-            h={36}
+            ellipsizeMode="tail"
+            lineHeight="$sm"
           >
             {recipe.name}
           </Text>
-          <Text fontSize="$xs" color={warnaGlobal.gray600}>
+          <Text fontSize="$xs" color={warnaGlobal.gray600} mt="$1">
             Time
           </Text>
-          <Text fontSize="$xs" fontWeight="$semibold">
+          <Text fontSize="$xs" fontWeight="$semibold" numberOfLines={1}>
             {recipe.time}
           </Text>
         </VStack>

@@ -358,3 +358,49 @@ export const convertMealForLocal = (apiMeal) => {
     source: apiMeal.strSource,
   };
 };
+
+/**
+ * ========================================
+ * ESTIMASI WAKTU BERDASARKAN COMPLEXITY
+ * ========================================
+ * Menghitung estimasi waktu memasak berdasarkan:
+ * - Jumlah bahan (ingredients)
+ * - Jumlah langkah instruksi
+ * 
+ * Formula:
+ * - Base time: 10 menit
+ * - Per ingredient: +2 menit
+ * - Per instruction step: +3 menit
+ * - Min: 15 menit, Max: 90 menit
+ * 
+ * @param {Object} meal - Meal object dari API
+ * @returns {string} Estimasi waktu (contoh: "35 menit")
+ */
+export const estimateCookingTime = (meal) => {
+  if (!meal) return "30 menit";
+  
+  // Hitung jumlah ingredients
+  const ingredients = parseIngredients(meal);
+  const ingredientCount = ingredients.length;
+  
+  // Hitung jumlah instruction steps
+  let stepCount = 0;
+  if (meal.strInstructions) {
+    const steps = meal.strInstructions
+      .split(/\r\n|\n/)
+      .map(s => s.trim())
+      .filter(s => s.length > 10); // Filter step yang meaningful
+    stepCount = steps.length;
+  }
+  
+  // Calculate estimated time
+  let estimatedTime = 10; // Base time
+  estimatedTime += ingredientCount * 2; // 2 menit per bahan
+  estimatedTime += stepCount * 3; // 3 menit per step
+  
+  // Clamp between 15-90 minutes
+  estimatedTime = Math.max(15, Math.min(90, estimatedTime));
+  
+  return `${estimatedTime} menit`;
+};
+
