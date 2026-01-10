@@ -48,12 +48,33 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is logged in
-        const userData = await getUserData();
-        setUser(userData || {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-        });
+        // User is logged in - Load profile from Firestore
+        try {
+          const profileResult = await getUserProfile(firebaseUser.uid);
+          if (profileResult.success && profileResult.data) {
+            // Use Firestore data
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              ...profileResult.data,
+            });
+          } else {
+            // Fallback to basic data if profile not found
+            const userData = await getUserData();
+            setUser(userData || {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+            });
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          // Fallback
+          const userData = await getUserData();
+          setUser(userData || {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+          });
+        }
         setIsAuthenticated(true);
       } else {
         // User is logged out

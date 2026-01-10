@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ScrollView as RNScrollView, Image, ActivityIndicator, Alert, RefreshControl, Modal } from "react-native";
+import { ScrollView as RNScrollView, Image, ActivityIndicator, Alert, RefreshControl, Modal, View, TouchableWithoutFeedback } from "react-native";
 import {
   Container,
   warnaGlobal,
@@ -286,7 +286,7 @@ export default function HomePage() {
   // ========================================
   // 🏷️ CATEGORY FILTER HANDLER
   // ========================================
-  const handleCategoryChange = async (categoryName) => {
+  const loadCategoryMeals = async (categoryName) => {
     setSelectedCategory(categoryName);
 
     if (categoryName === "All") {
@@ -623,7 +623,7 @@ export default function HomePage() {
                         key={category.id}
                         category={category.name}
                         isActive={selectedCategory === category.name}
-                        onPress={() => handleCategoryChange(category.name)}
+                        onPress={() => loadCategoryMeals(category.name)}
                         activeColor={warnaGlobal.primary}
                       />
                     ))}
@@ -726,22 +726,16 @@ export default function HomePage() {
         transparent={true}
         onRequestClose={() => setShowFilterModal(false)}
       >
-        <Pressable 
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onPress={() => setShowFilterModal(false)}
-        >
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            <Box
-              position="absolute"
-              bottom={0}
-              left={0}
-              right={0}
-              bg="$white"
-              borderTopLeftRadius="$3xl"
-              borderTopRightRadius="$3xl"
-              p="$5"
-              pb="$8"
-            >
+        <TouchableWithoutFeedback onPress={() => setShowFilterModal(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+            <TouchableWithoutFeedback>
+              <Box
+                bg="$white"
+                borderTopLeftRadius="$3xl"
+                borderTopRightRadius="$3xl"
+                p="$5"
+                pb="$8"
+              >
               {/* Header */}
               <HStack justifyContent="space-between" alignItems="center" mb="$4">
                 <Heading size="lg" fontWeight="$bold">
@@ -765,6 +759,7 @@ export default function HomePage() {
                         onPress={() => {
                           setSelectedCategory(cat.name);
                           loadCategoryMeals(cat.name);
+                          setShowFilterModal(false); // Auto close after select
                         }}
                       >
                         <Box
@@ -884,8 +879,9 @@ export default function HomePage() {
                 </Pressable>
               </HStack>
             </Box>
-          </Pressable>
-        </Pressable>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </Container>
   );

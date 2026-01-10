@@ -167,12 +167,20 @@ export default function ProfileTab() {
                 borderRadius="$full"
                 overflow="hidden"
                 bg={warnaGlobal.gray100}
+                justifyContent="center"
+                alignItems="center"
               >
-                <Image
-                  source={userData.avatarImage}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                />
+                {user?.photoURL ? (
+                  <Image
+                    source={{ uri: user.photoURL }}
+                    style={{ width: "100%", height: "100%" }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text fontSize={42} color={warnaGlobal.primary}>
+                    {(user?.nama || user?.email || 'U').charAt(0).toUpperCase()}
+                  </Text>
+                )}
               </Box>
 
               {/* Stats di kanan */}
