@@ -17,9 +17,55 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../config/firebaseConfig';
 
 const ARTIKEL_COLLECTION = 'articles';
+
+/**
+ * Upload artikel thumbnail ke Firebase Storage
+ * @param {string} userId - User ID penulis
+ * @param {string} imageUri - Local image URI
+ * @returns {Object} { success, thumbnailURL }
+ */
+export const uploadArtikelThumbnail = async (userId, imageUri) => {
+  try {
+    if (!imageUri || !imageUri.startsWith('file://')) {
+      console.log('📷 No valid image URI to upload');
+      return { success: true, thumbnailURL: '' };
+    }
+
+    console.log('📷 Uploading thumbnail to Firebase Storage...');
+    
+    // Convert image URI to blob
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    
+    // Create reference to storage
+    const filename = `artikel_${userId}_${Date.now()}.jpg`;
+    const storageRef = ref(storage, `artikel_thumbnails/${filename}`);
+    
+    // Upload file
+    await uploadBytes(storageRef, blob);
+    
+    // Get download URL
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    console.log('📷 Thumbnail uploaded successfully:', downloadURL);
+    
+    return {
+      success: true,
+      thumbnailURL: downloadURL
+    };
+  } catch (error) {
+    console.error('📷 Error uploading thumbnail:', error);
+    return {
+      success: false,
+      thumbnailURL: '',
+      error: error.message
+    };
+  }
+};
 
 /**
  * Create artikel baru

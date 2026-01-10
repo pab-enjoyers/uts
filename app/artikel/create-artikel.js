@@ -33,7 +33,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Container, warnaGlobal } from "../../styles";
 import { useAuth } from "../../context/AuthContext";
-import { createArtikel } from "../../services/artikelService";
+import { createArtikel, uploadArtikelThumbnail } from "../../services/artikelService";
 import * as ImagePicker from "expo-image-picker";
 
 const CATEGORIES = [
@@ -123,11 +123,24 @@ export default function CreateArtikel() {
     try {
       setLoading(true);
 
+      // Upload thumbnail ke Firebase Storage jika ada
+      let thumbnailURL = '';
+      if (thumbnail) {
+        console.log('📷 Uploading thumbnail...');
+        const uploadResult = await uploadArtikelThumbnail(user.uid, thumbnail);
+        if (uploadResult.success) {
+          thumbnailURL = uploadResult.thumbnailURL;
+          console.log('📷 Thumbnail URL:', thumbnailURL);
+        } else {
+          console.warn('📷 Thumbnail upload failed, continuing without thumbnail');
+        }
+      }
+
       const artikelData = {
         title: title.trim(),
         content: content.trim(),
         category: category,
-        thumbnail: thumbnail || null,
+        thumbnail: thumbnailURL, // Gunakan URL dari Firebase Storage
       };
 
       const result = await createArtikel(user.uid, artikelData);

@@ -169,20 +169,38 @@ export default function BookmarkTab() {
           <Ionicons
             name="bookmark-outline"
             size={80}
-            color={warnaGlobal.gray400}
+            color={warnaGlobal.gray400Hex}
           />
-          <Heading size="lg" mt="$4" textAlign="center">
+          <Text
+            fontSize="$lg"
+            fontWeight="$bold"
+            color={warnaGlobal.gray900}
+            mt="$4"
+            textAlign="center"
+          >
             Login Diperlukan
-          </Heading>
+          </Text>
           <Text color={warnaGlobal.gray600} textAlign="center" mt="$2">
             Silakan login untuk melihat bookmark Anda
           </Text>
-          <CustomButton
+          <Pressable
             onPress={() => router.push("/auth/login")}
             mt="$6"
           >
-            Login Sekarang
-          </CustomButton>
+            <Box
+              bg={warnaGlobal.primaryHex}
+              px="$6"
+              py="$3"
+              borderRadius="$xl"
+            >
+              <Text
+                color="$white"
+                fontWeight="$semibold"
+              >
+                Login Sekarang
+              </Text>
+            </Box>
+          </Pressable>
         </VStack>
       </Container>
     );
@@ -210,21 +228,39 @@ export default function BookmarkTab() {
           <Ionicons
             name="bookmark-outline"
             size={80}
-            color={warnaGlobal.gray400}
+            color={warnaGlobal.gray400Hex}
           />
-          <Heading size="lg" mt="$4" textAlign="center">
+          <Text
+            fontSize="$lg"
+            fontWeight="$bold"
+            color={warnaGlobal.gray900}
+            mt="$4"
+            textAlign="center"
+          >
             Belum Ada Bookmark
-          </Heading>
+          </Text>
           <Text color={warnaGlobal.gray600} textAlign="center" mt="$2">
             Mulai simpan resep favorit Anda dengan menekan ikon bookmark
           </Text>
-          <CustomButton
+          <Pressable
             onPress={() => router.push("/(tabs)")}
             mt="$6"
-            variant="outline"
           >
-            Jelajahi Resep
-          </CustomButton>
+            <Box
+              borderWidth={1}
+              borderColor={warnaGlobal.primaryHex}
+              px="$6"
+              py="$3"
+              borderRadius="$xl"
+            >
+              <Text
+                color={warnaGlobal.primaryHex}
+                fontWeight="$semibold"
+              >
+                Jelajahi Resep
+              </Text>
+            </Box>
+          </Pressable>
         </VStack>
       </Container>
     );

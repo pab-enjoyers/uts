@@ -874,6 +874,47 @@ export const getUnreadNotificationCount = async (uid) => {
 };
 
 /**
+ * Mark ALL notifications as read
+ * @param {string} uid - User ID
+ * @returns {Object} { success, message, markedCount }
+ */
+export const markAllNotificationsAsRead = async (uid) => {
+  try {
+    if (!uid) {
+      return { success: false, message: 'User ID diperlukan' };
+    }
+
+    const notificationsRef = collection(db, 'users', uid, 'notifications');
+    const q = query(notificationsRef, where('read', '==', false));
+    const snapshot = await getDocs(q);
+    
+    let markedCount = 0;
+    const updatePromises = snapshot.docs.map(async (docSnap) => {
+      const notifRef = doc(db, 'users', uid, 'notifications', docSnap.id);
+      await updateDoc(notifRef, {
+        read: true,
+        readAt: Timestamp.now(),
+      });
+      markedCount++;
+    });
+    
+    await Promise.all(updatePromises);
+    
+    return {
+      success: true,
+      message: `${markedCount} notifikasi ditandai sudah dibaca`,
+      markedCount
+    };
+  } catch (error) {
+    console.error('Error marking all notifications:', error);
+    return {
+      success: false,
+      message: 'Gagal menandai semua notifikasi'
+    };
+  }
+};
+
+/**
  * Helper: Format timestamp to relative time
  */
 const formatRelativeTime = (timestamp) => {

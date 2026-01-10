@@ -7,6 +7,7 @@ import { router, useFocusEffect } from "expo-router";
 import {
   getNotifications,
   markNotificationAsRead,
+  markAllNotificationsAsRead,
   deleteNotification,
   getUnreadNotificationCount,
 } from "../../services/userService";
@@ -30,6 +31,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [markingAll, setMarkingAll] = useState(false);
 
   // Load notifications on mount and when focused
   useEffect(() => {
@@ -123,6 +125,25 @@ export default function NotificationsPage() {
     if (activeTab === "dibaca") return notifications.filter((n) => n.read);
     if (activeTab === "belum dibaca") return notifications.filter((n) => !n.read);
     return notifications;
+  };
+
+  // Handle mark all as read
+  const handleMarkAllAsRead = async () => {
+    if (!user || markingAll || unreadCount === 0) return;
+    
+    try {
+      setMarkingAll(true);
+      const result = await markAllNotificationsAsRead(user.uid);
+      if (result.success) {
+        setUnreadCount(0);
+        setUnreadNotifications(0);
+        loadNotifications();
+      }
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    } finally {
+      setMarkingAll(false);
+    }
   };
 
   const filteredNotifications = getFilteredNotifications();
@@ -228,34 +249,69 @@ export default function NotificationsPage() {
             borderRadius="$md"
             alignItems="center"
           >
-            <Text
-              color={
-                activeTab === "belum dibaca" ? "$white" : warnaGlobal.gray500
-              }
-              fontSize="$sm"
-              fontWeight="$semibold"
-            >
-              Belum Dibaca
-            </Text>
+            <HStack space="xs" alignItems="center">
+              <Text
+                color={
+                  activeTab === "belum dibaca" ? "$white" : warnaGlobal.gray500
+                }
+                fontSize="$sm"
+                fontWeight="$semibold"
+              >
+                Belum Dibaca
+              </Text>
+              {unreadCount > 0 && (
+                <Box
+                  bg={activeTab === "belum dibaca" ? "$white" : warnaGlobal.primaryHex}
+                  borderRadius="$full"
+                  px="$2"
+                  py="$0.5"
+                  minWidth={20}
+                  alignItems="center"
+                >
+                  <Text
+                    color={activeTab === "belum dibaca" ? warnaGlobal.primaryHex : "$white"}
+                    fontSize={10}
+                    fontWeight="$bold"
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </Box>
+              )}
+            </HStack>
           </Pressable>
         </HStack>
       </Box>
       
-      {/* Not logged in view */}
+      {/* Not logged in view - Sama seperti Bookmark */}
       {!user ? (
         <Container scrollable bg="$white" padding="$0">
-          <VStack space="md" px="$4" mt="$48" pb="$24" alignItems="center" py="$10">
-            <Ionicons name="notifications-off-outline" size={80} color={warnaGlobal.gray300Hex} />
-            <Heading size="md" color={warnaGlobal.gray900}>
-              Belum Login
-            </Heading>
-            <Text fontSize="$sm" color={warnaGlobal.gray500} textAlign="center">
-              Silakan login untuk melihat notifikasi
+          <VStack flex={1} justifyContent="center" alignItems="center" p="$5" mt="$48">
+            <Ionicons
+              name="notifications-off-outline"
+              size={80}
+              color={warnaGlobal.gray400Hex}
+            />
+            <Text
+              fontSize="$lg"
+              fontWeight="$bold"
+              color={warnaGlobal.gray900}
+              mt="$4"
+              textAlign="center"
+            >
+              Login Diperlukan
             </Text>
-            <Pressable onPress={() => router.push('/auth/login')} mt="$4">
-              <Box bg={warnaGlobal.primary} px="$6" py="$3" borderRadius="$xl">
+            <Text 
+              fontSize="$sm" 
+              color={warnaGlobal.gray500} 
+              mt="$2"
+              textAlign="center"
+            >
+              Silakan login untuk melihat notifikasi Anda
+            </Text>
+            <Pressable onPress={() => router.push('/auth/login')} mt="$6">
+              <Box bg={warnaGlobal.primaryHex} px="$6" py="$3" borderRadius="$xl">
                 <Text color="$white" fontWeight="$semibold">
-                  Login
+                  Login Sekarang
                 </Text>
               </Box>
             </Pressable>
@@ -263,8 +319,8 @@ export default function NotificationsPage() {
         </Container>
       ) : loading ? (
         <Container scrollable bg="$white" padding="$0">
-          <VStack space="md" px="$4" mt="$48" pb="$24" alignItems="center" py="$10">
-            <Spinner size="large" color={warnaGlobal.primary} />
+          <VStack flex={1} justifyContent="center" alignItems="center" mt="$48">
+            <Spinner size="large" color={warnaGlobal.primaryHex} />
             <Text color={warnaGlobal.gray500} mt="$3">
               Memuat notifikasi...
             </Text>
@@ -283,14 +339,27 @@ export default function NotificationsPage() {
           {/* Today Section */}
           {todayNotifications.length > 0 && (
             <VStack space="md">
-              <Text
-                fontSize="$sm"
-                fontWeight="$bold"
-                color={warnaGlobal.gray900}
-                px="$1"
-              >
-                Hari ini
-              </Text>
+              <HStack justifyContent="space-between" alignItems="center" px="$1">
+                <Text
+                  fontSize="$sm"
+                  fontWeight="$bold"
+                  color={warnaGlobal.gray900}
+                >
+                  Hari ini
+                </Text>
+                {/* Tandai Semua sebagai text link */}
+                {unreadCount > 0 && (
+                  <Pressable onPress={handleMarkAllAsRead} disabled={markingAll}>
+                    <Text
+                      fontSize="$xs"
+                      fontWeight="$medium"
+                      color={markingAll ? warnaGlobal.gray400 : warnaGlobal.primaryHex}
+                    >
+                      {markingAll ? "Menandai..." : "Tandai Semua Dibaca"}
+                    </Text>
+                  </Pressable>
+                )}
+              </HStack>
               <VStack space="md">
                 {todayNotifications.map((notification) => (
                   <NotificationCard
@@ -349,16 +418,40 @@ export default function NotificationsPage() {
             </VStack>
           )}
 
-          {/* Empty State */}
+          {/* Empty State - Sama seperti Bookmark (tanpa tombol) */}
           {filteredNotifications.length === 0 && (
-            <Box py="$10" alignItems="center">
-              <Text fontSize={48} mb="$2">
-                🔔
+            <VStack flex={1} justifyContent="center" alignItems="center" p="$5" py="$16">
+              <Ionicons
+                name="notifications-outline"
+                size={80}
+                color={warnaGlobal.gray400Hex}
+              />
+              <Text
+                fontSize="$lg"
+                fontWeight="$bold"
+                color={warnaGlobal.gray900}
+                mt="$4"
+                textAlign="center"
+              >
+                {activeTab === "belum dibaca" 
+                  ? "Tidak Ada Notifikasi Baru" 
+                  : activeTab === "dibaca"
+                  ? "Belum Ada yang Dibaca"
+                  : "Belum Ada Notifikasi"}
               </Text>
-              <Text color={warnaGlobal.gray500} fontSize="$sm">
-                Tidak ada notifikasi
+              <Text 
+                fontSize="$sm" 
+                color={warnaGlobal.gray600} 
+                mt="$2"
+                textAlign="center"
+              >
+                {activeTab === "belum dibaca"
+                  ? "Semua notifikasi sudah dibaca"
+                  : activeTab === "dibaca"
+                  ? "Notifikasi yang sudah Anda baca akan muncul di sini"
+                  : "Notifikasi baru akan muncul di sini"}
               </Text>
-            </Box>
+            </VStack>
           )}
         </VStack>
       </Container>

@@ -13,7 +13,8 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential
 } from 'firebase/auth';
-import { auth } from '../config/firebaseConfig';
+import { auth, db } from '../config/firebaseConfig';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { 
   saveToken, 
   saveUserData, 
@@ -43,6 +44,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  // Real-time listener untuk notification count
+  useEffect(() => {
+    if (!user?.uid) {
+      setUnreadNotifications(0);
+      return;
+    }
+
+    // Setup real-time listener untuk unread notifications
+    const notificationsRef = collection(db, 'users', user.uid, 'notifications');
+    const q = query(notificationsRef, where('read', '==', false));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log('🔔 Real-time notification update:', snapshot.size);
+      setUnreadNotifications(snapshot.size);
+    }, (error) => {
+      console.error('Error listening to notifications:', error);
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   // Check auth state saat app load
   useEffect(() => {
