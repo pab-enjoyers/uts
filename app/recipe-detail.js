@@ -172,7 +172,7 @@ export default function RecipeDetailScreen() {
     }
 
     try {
-      const result = await addRating(user.uid, mealId, rating);
+      const result = await addRating(user.uid, mealId, rating, '', meal?.strMeal || '', meal?.strMealThumb || '');
       if (result.success) {
         setUserRating(rating);
         // Reload average rating

@@ -455,9 +455,11 @@ export const isFavorited = isBookmarked;
  * @param {string} mealId - Meal ID
  * @param {number} rating - Rating (1-5)
  * @param {string} review - Review text (optional)
+ * @param {string} mealName - Name of the meal (optional)
+ * @param {string} mealThumb - Thumbnail URL of the meal (optional)
  * @returns {Object} { success, message }
  */
-export const addRating = async (uid, mealId, rating, review = '') => {
+export const addRating = async (uid, mealId, rating, review = '', mealName = '', mealThumb = '') => {
   try {
     if (!uid || !mealId) {
       return { success: false, message: 'User ID dan Meal ID diperlukan' };
@@ -467,12 +469,14 @@ export const addRating = async (uid, mealId, rating, review = '') => {
       return { success: false, message: 'Rating harus antara 1-5' };
     }
 
-    // Get user name from profile
+    // Get user name and photo from profile
     let userName = 'Anonymous';
+    let userPhotoURL = '';
     try {
       const userProfile = await getUserProfile(uid);
       if (userProfile.success && userProfile.data) {
         userName = userProfile.data.nama || userProfile.data.displayName || userProfile.data.email || 'Anonymous';
+        userPhotoURL = userProfile.data.photoURL || '';
       }
     } catch (error) {
       console.log('Could not fetch user name:', error);
@@ -483,9 +487,12 @@ export const addRating = async (uid, mealId, rating, review = '') => {
     const ratingData = {
       uid,
       mealId,
+      mealName: mealName || 'Resep',
+      mealThumb: mealThumb || '',
       rating: Number(rating),
       review: review || '',
       userName,
+      userPhotoURL,
       likes: 0,
       likedBy: [],
       createdAt: Timestamp.now(),
@@ -493,6 +500,19 @@ export const addRating = async (uid, mealId, rating, review = '') => {
     };
     
     await setDoc(ratingRef, ratingData);
+    
+    // Also save to user's reviewedMeals array for easier querying
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const reviewedMeals = userData.reviewedMeals || [];
+      if (!reviewedMeals.includes(mealId)) {
+        await updateDoc(userRef, {
+          reviewedMeals: [...reviewedMeals, mealId]
+        });
+      }
+    }
     
     return {
       success: true,
@@ -983,18 +1003,35 @@ export const getUserReviews = async (uid) => {
 
     console.log('📝 Getting reviews for user:', uid);
     
-    // Get all mealIds from ratings collection first
-    const ratingsRef = collection(db, 'ratings');
-    const ratingsSnapshot = await getDocs(ratingsRef);
+    // Get user's reviewedMeals from their profile
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
     
-    console.log('📝 Found', ratingsSnapshot.size, 'meals with ratings');
+    if (!userSnap.exists()) {
+      console.log('📝 User not found');
+      return { success: true, reviews: [] };
+    }
+    
+    const userData = userSnap.data();
+    let reviewedMeals = userData.reviewedMeals || [];
+    
+    console.log('📝 User has', reviewedMeals.length, 'meals in reviewedMeals');
+    
+    // If reviewedMeals is empty, try to sync from existing ratings
+    // This handles legacy data before we started tracking reviewedMeals
+    if (reviewedMeals.length === 0) {
+      console.log('📝 Checking for legacy ratings to sync...');
+      reviewedMeals = await syncUserReviewedMeals(uid);
+    }
+    
+    if (reviewedMeals.length === 0) {
+      return { success: true, reviews: [] };
+    }
     
     const reviews = [];
     
-    // For each meal that has ratings, check if user has reviewed
-    for (const mealDoc of ratingsSnapshot.docs) {
-      const mealId = mealDoc.id;
-      
+    // For each mealId in reviewedMeals, get the rating
+    for (const mealId of reviewedMeals) {
       try {
         const userRatingRef = doc(db, 'ratings', mealId, 'userRatings', uid);
         const userRatingSnap = await getDoc(userRatingRef);
@@ -1010,6 +1047,8 @@ export const getUserReviews = async (uid) => {
             mealThumb: data.mealThumb || '',
             rating: data.rating || 0,
             review: data.review || '',
+            userName: data.userName || 'Anonymous',
+            userPhotoURL: data.userPhotoURL || '',
             createdAt: data.createdAt,
             likes: data.likes || 0,
           });
@@ -1038,5 +1077,65 @@ export const getUserReviews = async (uid) => {
       success: false,
       reviews: []
     };
+  }
+};
+
+/**
+ * Sync user's reviewed meals from existing ratings (for legacy data)
+ * @param {string} uid - User ID
+ * @returns {Array} Array of mealIds
+ */
+export const syncUserReviewedMeals = async (uid) => {
+  try {
+    console.log('🔄 Syncing reviewed meals for user:', uid);
+    
+    // We need to check common meal IDs - this is a workaround since we can't query subcollections
+    // In production, you'd use a Cloud Function to do this properly
+    // For now, we'll check against the bookmarks and any known meal IDs
+    
+    const reviewedMeals = [];
+    
+    // Get user's bookmarks to check for ratings there
+    const bookmarksRef = collection(db, 'users', uid, 'bookmarks');
+    const bookmarksSnap = await getDocs(bookmarksRef);
+    
+    const mealIdsToCheck = [];
+    bookmarksSnap.forEach((doc) => {
+      mealIdsToCheck.push(doc.id);
+    });
+    
+    // Also add some common meal IDs from theMealDB (first 100)
+    for (let i = 52764; i <= 52864; i++) {
+      mealIdsToCheck.push(i.toString());
+    }
+    
+    // Check each potential mealId for user's rating
+    for (const mealId of mealIdsToCheck) {
+      try {
+        const userRatingRef = doc(db, 'ratings', mealId, 'userRatings', uid);
+        const ratingSnap = await getDoc(userRatingRef);
+        
+        if (ratingSnap.exists()) {
+          reviewedMeals.push(mealId);
+          console.log('🔄 Found existing rating for meal:', mealId);
+        }
+      } catch (err) {
+        // Ignore errors for individual meal checks
+      }
+    }
+    
+    // If we found any, save them to user profile
+    if (reviewedMeals.length > 0) {
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        reviewedMeals: reviewedMeals
+      });
+      console.log('🔄 Synced', reviewedMeals.length, 'reviewed meals to user profile');
+    }
+    
+    return reviewedMeals;
+  } catch (error) {
+    console.error('❌ Error syncing reviewed meals:', error);
+    return [];
   }
 };

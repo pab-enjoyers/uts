@@ -66,7 +66,7 @@ export default function RateRecipe() {
       setSubmitting(true);
       console.log("📊 Submitting rating:", { mealId, rating, review });
 
-      const result = await addRating(user.uid, mealId, rating, review.trim());
+      const result = await addRating(user.uid, mealId, rating, review.trim(), mealName, mealThumb);
 
       console.log("📊 Rating result:", result);
 

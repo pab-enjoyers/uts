@@ -230,6 +230,16 @@ export default function ArtikelTab() {
                   {item.likes || 0}
                 </Text>
               </HStack>
+              <HStack space="xs" alignItems="center">
+                <Ionicons
+                  name="chatbubble-outline"
+                  size={16}
+                  color={warnaGlobal.gray500}
+                />
+                <Text fontSize="$xs" color={warnaGlobal.gray600}>
+                  {item.commentsCount || 0}
+                </Text>
+              </HStack>
             </HStack>
 
             <Text fontSize="$xs" color={warnaGlobal.gray500}>
