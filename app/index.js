@@ -7,17 +7,25 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function InitialRedirect() {
   const { isAuthenticated, loading, checkAuthStatus } = useAuth();
   const [checking, setChecking] = useState(true);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const init = async () => {
-      // Check if user has seen onboarding
       try {
-        const seen = await AsyncStorage.getItem('hasSeenOnboarding');
-        setHasSeenOnboarding(seen === 'true');
+        // Check if "always show onboarding" toggle is ON
+        const alwaysShow = await AsyncStorage.getItem('alwaysShowOnboarding');
+        
+        if (alwaysShow === 'true') {
+          // Toggle is ON - always show onboarding
+          setShowOnboarding(true);
+        } else {
+          // Toggle is OFF - check if first time user
+          const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
+          setShowOnboarding(hasSeenOnboarding !== 'true');
+        }
       } catch (error) {
         console.log('Error checking onboarding status:', error);
-        setHasSeenOnboarding(false);
+        setShowOnboarding(false);
       }
       
       await checkAuthStatus();
@@ -28,7 +36,7 @@ export default function InitialRedirect() {
   }, []);
 
   // Show loading spinner while checking auth
-  if (loading || checking || hasSeenOnboarding === null) {
+  if (loading || checking) {
     return (
       <Box flex={1} justifyContent="center" alignItems="center" bg="$white">
         <VStack space="md" alignItems="center">
@@ -39,8 +47,8 @@ export default function InitialRedirect() {
     );
   }
 
-  // First time user - show splash/onboarding
-  if (!hasSeenOnboarding) {
+  // Show splash/onboarding if needed
+  if (showOnboarding) {
     return <Redirect href="/syihab/splash" />;
   }
 
