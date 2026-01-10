@@ -21,6 +21,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebaseConfig';
 
 const ARTIKEL_COLLECTION = 'articles';
+const COMMENTS_SUBCOLLECTION = 'comments';
 
 /**
  * Upload artikel thumbnail ke Firebase Storage
@@ -317,6 +318,122 @@ export const toggleLikeArtikel = async (articleId, isLiked) => {
     return {
       success: false,
       error: error.message,
+    };
+  }
+};
+
+// ========================================
+// 💬 COMMENT FUNCTIONS
+// ========================================
+
+/**
+ * Get all comments for an article
+ * @param {string} articleId - Article ID
+ * @returns {Object} { success, comments: [] }
+ */
+export const getArtikelComments = async (articleId) => {
+  try {
+    const commentsRef = collection(db, ARTIKEL_COLLECTION, articleId, COMMENTS_SUBCOLLECTION);
+    const q = query(commentsRef, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    const comments = [];
+    querySnapshot.forEach((doc) => {
+      comments.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    return {
+      success: true,
+      comments
+    };
+  } catch (error) {
+    console.error('Error getting comments:', error);
+    return {
+      success: false,
+      comments: [],
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Add a comment to an article
+ * @param {string} articleId - Article ID
+ * @param {string} userId - User ID
+ * @param {string} userName - User display name
+ * @param {string} userPhotoURL - User photo URL
+ * @param {string} content - Comment content
+ * @returns {Object} { success, commentId }
+ */
+export const addArtikelComment = async (articleId, userId, userName, userPhotoURL, content) => {
+  try {
+    const commentsRef = collection(db, ARTIKEL_COLLECTION, articleId, COMMENTS_SUBCOLLECTION);
+    
+    const commentData = {
+      userId,
+      userName: userName || 'Anonymous',
+      userPhotoURL: userPhotoURL || '',
+      content,
+      createdAt: serverTimestamp(),
+    };
+    
+    const docRef = await addDoc(commentsRef, commentData);
+    
+    // Update comment count on article
+    const articleRef = doc(db, ARTIKEL_COLLECTION, articleId);
+    const articleSnap = await getDoc(articleRef);
+    if (articleSnap.exists()) {
+      const currentCount = articleSnap.data().commentsCount || 0;
+      await updateDoc(articleRef, {
+        commentsCount: currentCount + 1
+      });
+    }
+    
+    return {
+      success: true,
+      commentId: docRef.id
+    };
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Delete a comment from an article
+ * @param {string} articleId - Article ID
+ * @param {string} commentId - Comment ID
+ * @returns {Object} { success }
+ */
+export const deleteArtikelComment = async (articleId, commentId) => {
+  try {
+    const commentRef = doc(db, ARTIKEL_COLLECTION, articleId, COMMENTS_SUBCOLLECTION, commentId);
+    await deleteDoc(commentRef);
+    
+    // Update comment count on article
+    const articleRef = doc(db, ARTIKEL_COLLECTION, articleId);
+    const articleSnap = await getDoc(articleRef);
+    if (articleSnap.exists()) {
+      const currentCount = articleSnap.data().commentsCount || 0;
+      await updateDoc(articleRef, {
+        commentsCount: Math.max(0, currentCount - 1)
+      });
+    }
+    
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    return {
+      success: false,
+      error: error.message
     };
   }
 };

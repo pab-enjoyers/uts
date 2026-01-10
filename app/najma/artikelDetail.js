@@ -13,22 +13,32 @@ import {
   Avatar,
   AvatarImage,
   AvatarFallbackText,
+  Input,
+  InputField,
 } from "@gluestack-ui/themed";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, router } from "expo-router";
 import { warnaGlobal } from "../../styles/theme";
-import { getArtikelById, incrementViews, toggleLikeArtikel } from "../../services/artikelService";
+import { getArtikelById, incrementViews, toggleLikeArtikel, getArtikelComments, addArtikelComment, deleteArtikelComment } from "../../services/artikelService";
 import { getUserProfile } from "../../services/userService";
-import { Image, ActivityIndicator } from "react-native";
+import { useAuth } from "../../context/AuthContext";
+import { Image, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 
 export default function ArtikelDetailScreen() {
   const { id } = useLocalSearchParams();
+  const { user } = useAuth();
   const [article, setArticle] = useState(null);
   const [author, setAuthor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [likingInProgress, setLikingInProgress] = useState(false);
+  
+  // Comment states
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   // Load article from Firebase
   useEffect(() => {
@@ -54,12 +64,75 @@ export default function ArtikelDetailScreen() {
         }
         // Increment views
         await incrementViews(id);
+        // Load comments
+        loadComments();
       }
     } catch (error) {
       console.error("Error loading article:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Load comments from Firebase
+  const loadComments = async () => {
+    try {
+      setLoadingComments(true);
+      const result = await getArtikelComments(id);
+      if (result.success) {
+        setComments(result.comments);
+      }
+    } catch (error) {
+      console.error("Error loading comments:", error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // Submit new comment
+  const handleSubmitComment = async () => {
+    if (!newComment.trim()) return;
+    if (!user) {
+      Alert.alert("Login Diperlukan", "Silakan login untuk berkomentar");
+      return;
+    }
+
+    try {
+      setSubmittingComment(true);
+      const result = await addArtikelComment(id, user.uid, user.nama || user.email, user.photoURL, newComment.trim());
+      if (result.success) {
+        setNewComment("");
+        loadComments(); // Reload comments
+      } else {
+        Alert.alert("Error", result.error || "Gagal mengirim komentar");
+      }
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+      Alert.alert("Error", "Gagal mengirim komentar");
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  // Delete comment
+  const handleDeleteComment = (commentId) => {
+    Alert.alert(
+      "Hapus Komentar",
+      "Apakah Anda yakin ingin menghapus komentar ini?",
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: async () => {
+            const result = await deleteArtikelComment(id, commentId);
+            if (result.success) {
+              loadComments();
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Handle like toggle
@@ -291,6 +364,129 @@ export default function ArtikelDetailScreen() {
             >
               {article.content}
             </Text>
+          </Box>
+
+          {/* Comment Section */}
+          <Box mt="$6" px="$5">
+            <HStack space="sm" alignItems="center" mb="$4">
+              <Ionicons name="chatbubbles-outline" size={20} color={warnaGlobal.gray700} />
+              <Heading size="md" color={warnaGlobal.gray900}>
+                Komentar ({comments.length})
+              </Heading>
+            </HStack>
+
+            {/* Comment Input */}
+            {user ? (
+              <HStack space="sm" mb="$4" alignItems="flex-end">
+                <Avatar size="sm" bg={warnaGlobal.primaryHex}>
+                  {user.photoURL ? (
+                    <AvatarImage source={{ uri: user.photoURL }} />
+                  ) : (
+                    <AvatarFallbackText>{user.nama || user.email || "U"}</AvatarFallbackText>
+                  )}
+                </Avatar>
+                <Box flex={1}>
+                  <Input
+                    variant="outline"
+                    borderRadius="$xl"
+                    bg={warnaGlobal.gray50}
+                  >
+                    <InputField
+                      placeholder="Tulis komentar..."
+                      value={newComment}
+                      onChangeText={setNewComment}
+                      multiline
+                    />
+                  </Input>
+                </Box>
+                <Pressable
+                  onPress={handleSubmitComment}
+                  disabled={submittingComment || !newComment.trim()}
+                  bg={newComment.trim() ? warnaGlobal.primaryHex : warnaGlobal.gray200}
+                  p="$3"
+                  borderRadius="$full"
+                >
+                  {submittingComment ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Ionicons name="send" size={18} color={newComment.trim() ? "#fff" : warnaGlobal.gray400} />
+                  )}
+                </Pressable>
+              </HStack>
+            ) : (
+              <Pressable 
+                onPress={() => router.push("/auth/login")}
+                bg={warnaGlobal.gray100}
+                p="$4"
+                borderRadius="$xl"
+                mb="$4"
+              >
+                <Text textAlign="center" color={warnaGlobal.gray600}>
+                  <Text fontWeight="$bold" color={warnaGlobal.primaryHex}>Login</Text> untuk berkomentar
+                </Text>
+              </Pressable>
+            )}
+
+            {/* Comments List */}
+            {loadingComments ? (
+              <Box py="$6" alignItems="center">
+                <Spinner size="small" color={warnaGlobal.primaryHex} />
+              </Box>
+            ) : comments.length === 0 ? (
+              <Box py="$6" alignItems="center">
+                <Ionicons name="chatbubble-outline" size={40} color={warnaGlobal.gray300} />
+                <Text mt="$2" color={warnaGlobal.gray500} textAlign="center">
+                  Belum ada komentar.\nJadilah yang pertama berkomentar!
+                </Text>
+              </Box>
+            ) : (
+              <VStack space="md">
+                {comments.map((comment) => (
+                  <Box
+                    key={comment.id}
+                    bg={warnaGlobal.gray50}
+                    p="$4"
+                    borderRadius="$xl"
+                  >
+                    <HStack space="sm" alignItems="flex-start">
+                      <Avatar size="sm" bg={warnaGlobal.primaryHex}>
+                        {comment.userPhotoURL ? (
+                          <AvatarImage source={{ uri: comment.userPhotoURL }} />
+                        ) : (
+                          <AvatarFallbackText>{comment.userName || "U"}</AvatarFallbackText>
+                        )}
+                      </Avatar>
+                      <VStack flex={1} space="xs">
+                        <HStack justifyContent="space-between" alignItems="center">
+                          <Text fontSize="$sm" fontWeight="$bold" color={warnaGlobal.gray900}>
+                            {comment.userName || "Anonymous"}
+                          </Text>
+                          <HStack space="sm" alignItems="center">
+                            <Text fontSize="$xs" color={warnaGlobal.gray400}>
+                              {comment.createdAt?.toDate
+                                ? new Date(comment.createdAt.toDate()).toLocaleDateString("id-ID", {
+                                    day: "numeric",
+                                    month: "short",
+                                  })
+                                : "Baru"}
+                            </Text>
+                            {/* Delete button for own comments */}
+                            {user && comment.userId === user.uid && (
+                              <Pressable onPress={() => handleDeleteComment(comment.id)}>
+                                <Ionicons name="trash-outline" size={14} color={warnaGlobal.gray400} />
+                              </Pressable>
+                            )}
+                          </HStack>
+                        </HStack>
+                        <Text fontSize="$sm" color={warnaGlobal.gray700}>
+                          {comment.content}
+                        </Text>
+                      </VStack>
+                    </HStack>
+                  </Box>
+                ))}
+              </VStack>
+            )}
           </Box>
 
           {/* Footer */}

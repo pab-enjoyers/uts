@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollView as RNScrollView, Image, Alert, ActivityIndicator } from "react-native";
 import { Container, warnaGlobal, RecipeCard, CustomButton } from "../../styles";
 import {
@@ -106,7 +106,9 @@ export default function ProfileTab() {
    * Load user's reviews dari Firebase
    */
   const loadUserReviews = async () => {
+    console.log("🔍 loadUserReviews called, user:", user?.uid);
     if (!user || !user.uid) {
+      console.log("❌ No user, skipping reviews load");
       setReviews([]);
       setLoadingReviews(false);
       return;
@@ -114,14 +116,18 @@ export default function ProfileTab() {
 
     try {
       setLoadingReviews(true);
+      console.log("📡 Calling getUserReviews...");
       const result = await getUserReviews(user.uid);
+      console.log("📊 getUserReviews result:", result);
       if (result.success && result.reviews) {
+        console.log("✅ Found", result.reviews.length, "reviews");
         setReviews(result.reviews);
       } else {
+        console.log("⚠️ No reviews found or error");
         setReviews([]);
       }
     } catch (error) {
-      console.log("Error loading reviews:", error);
+      console.log("❌ Error loading reviews:", error);
       setReviews([]);
     } finally {
       setLoadingReviews(false);
@@ -146,8 +152,17 @@ export default function ProfileTab() {
       if (activeTab === "ulasan") {
         loadUserReviews();
       }
-    }, [user?.uid])
+    }, [user?.uid, activeTab])
   );
+
+  // Effect tambahan untuk load data saat tab berubah
+  useEffect(() => {
+    if (activeTab === "artikel") {
+      loadUserArticles();
+    } else if (activeTab === "ulasan") {
+      loadUserReviews();
+    }
+  }, [activeTab, user?.uid]);
   
   /**
    * Reload articles when tab changes to artikel

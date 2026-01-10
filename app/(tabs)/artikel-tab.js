@@ -356,6 +356,28 @@ export default function ArtikelTab() {
           )}
         </VStack>
       </Container>
+
+      {/* FAB - Fixed position, tidak terpengaruh scroll */}
+      <Pressable
+        position="absolute"
+        bottom={90}
+        right={20}
+        w={56}
+        h={56}
+        borderRadius="$full"
+        bg={warnaGlobal.primaryHex}
+        alignItems="center"
+        justifyContent="center"
+        shadowColor="$black"
+        shadowOffset={{ width: 0, height: 4 }}
+        shadowOpacity={0.3}
+        shadowRadius={4}
+        elevation={8}
+        zIndex={100}
+        onPress={() => router.push("/artikel/create-artikel")}
+      >
+        <Ionicons name="add" size={28} color="#fff" />
+      </Pressable>
     </Box>
   );
 }

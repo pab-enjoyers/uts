@@ -176,16 +176,29 @@ export default function AccountScreen() {
 
   if (loading) {
     return (
-      <Container bg="$white">
-        {/* Header */}
-        <Box bg="$white" borderBottomWidth={1} borderBottomColor={warnaGlobal.gray200} mt="$12">
-          <HStack alignItems="center" px="$4" py="$3" space="md">
-            <Pressable onPress={() => router.back()} p="$2">
-              <Ionicons name="chevron-back" size={24} color={warnaGlobal.gray900} />
+      <Box flex={1} bg="$white">
+        {/* Header - Fixed position seperti Settings */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          zIndex={10}
+          bg="$white"
+          px="$5"
+          pt="$12"
+          pb="$3"
+          borderBottomWidth={1}
+          borderBottomColor={warnaGlobal.gray200}
+        >
+          <HStack alignItems="center" justifyContent="space-between">
+            <Pressable onPress={() => router.back()}>
+              <Ionicons name="arrow-back-outline" size={24} color="#000" />
             </Pressable>
             <Heading size="lg" fontWeight="$bold" color={warnaGlobal.gray900}>
               Pusat Akun
             </Heading>
+            <Box w={24} />
           </HStack>
         </Box>
         
@@ -195,25 +208,38 @@ export default function AccountScreen() {
             Memuat profil...
           </Text>
         </VStack>
-      </Container>
+      </Box>
     );
   }
 
   return (
     <Box flex={1} bg={warnaGlobal.gray50}>
-      {/* Header */}
-      <Box bg="$white" borderBottomWidth={1} borderBottomColor={warnaGlobal.gray200} mt="$12">
-        <HStack alignItems="center" px="$4" py="$3" space="md">
-          <Pressable onPress={() => router.back()} p="$2">
-            <Ionicons name="chevron-back" size={24} color={warnaGlobal.gray900} />
+      {/* Header - Fixed position seperti Settings */}
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        zIndex={10}
+        bg="$white"
+        px="$5"
+        pt="$12"
+        pb="$3"
+        borderBottomWidth={1}
+        borderBottomColor={warnaGlobal.gray200}
+      >
+        <HStack alignItems="center" justifyContent="space-between">
+          <Pressable onPress={() => router.back()}>
+            <Ionicons name="arrow-back-outline" size={24} color="#000" />
           </Pressable>
           <Heading size="lg" fontWeight="$bold" color={warnaGlobal.gray900}>
             Pusat Akun
           </Heading>
+          <Box w={24} />
         </HStack>
       </Box>
 
-      <ScrollView style={{ flex: 1, backgroundColor: warnaGlobal.gray50 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1, backgroundColor: warnaGlobal.gray50, marginTop: 95 }} showsVerticalScrollIndicator={false}>
         <VStack p="$5" space="lg">
           {/* Profile Photo Card */}
           <Box bg="$white" borderRadius="$2xl" p="$5" shadowColor="$black" shadowOpacity={0.05} shadowRadius={10}>
