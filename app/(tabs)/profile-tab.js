@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView as RNScrollView, Image, Alert } from "react-native";
+import { ScrollView as RNScrollView, Image, Alert, ActivityIndicator } from "react-native";
 import { Container, warnaGlobal, RecipeCard, CustomButton } from "../../styles";
 import {
   VStack,
@@ -12,23 +12,31 @@ import {
   Badge,
   BadgeText,
   Spinner,
+  Fab,
+  FabIcon,
+  AddIcon,
 } from "@gluestack-ui/themed";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import { userData, profileResep } from "../../data/profile";
+import { profileResep } from "../../data/profile";
 import { useAuth } from "../../context/AuthContext";
 import { getBookmarks } from "../../services/userService";
+import { getArtikelByUser } from "../../services/artikelService";
 
 export default function ProfileTab() {
   // State untuk bookmark dan active tab (Props & State requirement)
   const [bookmarkedRecipes, setBookmarkedRecipes] = React.useState([]);
-  const [activeTab, setActiveTab] = React.useState("recipe");
-  const [logoutLoading, setLogoutLoading] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState("artikel");
+
   const [bookmarkCount, setBookmarkCount] = React.useState(0);
   const [loadingStats, setLoadingStats] = React.useState(true);
   
+  // Artikel state
+  const [articles, setArticles] = React.useState([]);
+  const [loadingArticles, setLoadingArticles] = React.useState(false);
+  
   // Auth context
-  const { logout, user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
 
   /**
    * Load bookmark count dari Firebase
@@ -55,6 +63,32 @@ export default function ProfileTab() {
       setLoadingStats(false);
     }
   };
+  
+  /**
+   * Load user's articles dari Firebase
+   */
+  const loadUserArticles = async () => {
+    if (!user || !user.uid) {
+      setArticles([]);
+      setLoadingArticles(false);
+      return;
+    }
+
+    try {
+      setLoadingArticles(true);
+      const result = await getArtikelByUser(user.uid);
+      if (result.success && result.articles) {
+        setArticles(result.articles);
+      } else {
+        setArticles([]);
+      }
+    } catch (error) {
+      console.log("Error loading articles:", error);
+      setArticles([]);
+    } finally {
+      setLoadingArticles(false);
+    }
+  };
 
   /**
    * Auto-refresh bookmark count when screen focused
@@ -62,8 +96,25 @@ export default function ProfileTab() {
   useFocusEffect(
     React.useCallback(() => {
       loadBookmarkCount();
-    }, [user])
+      // Refresh user profile juga
+      if (refreshUserProfile) {
+        refreshUserProfile();
+      }
+      // Load articles if tab is artikel
+      if (activeTab === "artikel") {
+        loadUserArticles();
+      }
+    }, [user?.uid])
   );
+  
+  /**
+   * Reload articles when tab changes to artikel
+   */
+  React.useEffect(() => {
+    if (activeTab === "artikel" && user?.uid) {
+      loadUserArticles();
+    }
+  }, [activeTab]);
 
   /**
    * Handle logout dengan konfirmasi
@@ -191,7 +242,7 @@ export default function ProfileTab() {
                     fontWeight="$bold"
                     color={warnaGlobal.gray900}
                   >
-                    {userData.stats.recipes}
+                    {user?.recipesCount || 0}
                   </Text>
                   <Text fontSize="$xs" color={warnaGlobal.gray500} mt="$1">
                     Resep
@@ -219,7 +270,7 @@ export default function ProfileTab() {
                     fontWeight="$bold"
                     color={warnaGlobal.gray900}
                   >
-                    {userData.stats.following}
+                    {user?.followingCount || 0}
                   </Text>
                   <Text fontSize="$xs" color={warnaGlobal.gray500} mt="$1">
                     Mengikuti
@@ -232,7 +283,7 @@ export default function ProfileTab() {
             <VStack space="xs" alignItems="flex-start" w="$full" mt="$3">
               <HStack justifyContent="space-between" alignItems="center" w="$full">
                 <Heading size="lg" fontWeight="$bold" color={warnaGlobal.gray900}>
-                  {user?.nama || userData.name}
+                  {user?.nama || 'User'}
                 </Heading>
                 <Pressable onPress={() => router.push('/auth/edit-profile')}>
                   <Ionicons name="create-outline" size={20} color="#EF4444" />
@@ -244,7 +295,7 @@ export default function ProfileTab() {
                 fontWeight="bold"
                 color={warnaGlobal.gray500}
               >
-                {userData.status}
+                {user?.status || 'Food Enthusiast'}
               </Text>
 
               <Text
@@ -253,53 +304,60 @@ export default function ProfileTab() {
                 lineHeight="$sm"
                 mt="$1"
               >
-                {user?.bio || userData.bio}
+                {user?.bio || 'Belum ada bio'}
               </Text>
 
-              <Pressable onPress={() => console.log("View more")}>
+              {/* Phone Number */}
+              {/* {user?.phone && (
+                <HStack space="xs" alignItems="center" mt="$2">
+                  <Ionicons name="call" size={14} color={warnaGlobal.gray500} />
+                  <Text fontSize="$xs" color={warnaGlobal.gray500}>
+                    {user.phone}
+                  </Text>
+                </HStack>
+              )} */}
+
+              {/* Location */}
+              {user?.location && (
+                <HStack space="xs" alignItems="center" mt="$1">
+                  <Ionicons name="location" size={14} color={warnaGlobal.gray500} />
+                  <Text fontSize="$xs" color={warnaGlobal.gray500}>
+                    {user.location}
+                  </Text>
+                </HStack>
+              )}
+
+              {/* <Pressable onPress={() => console.log("View more")}>
                 <Text fontSize="$sm" color={warnaGlobal.primary}>
                   More...
                 </Text>
               </Pressable>
-              
+               */}
               {/* Display logged in user email if available */}
-              {user && user.email && (
+              {/* {user && user.email && (
                 <Box mt="$2" w="$full">
                   <Text fontSize="$xs" color={warnaGlobal.gray400}>
                     🔐 {user.email}
                   </Text>
                 </Box>
-              )}
-              
-              {/* Logout Button */}
-              <Box mt="$3" w="$full">
-                <CustomButton
-                  title={logoutLoading ? "Logging out..." : "Logout"}
-                  onPress={handleLogout}
-                  variant="outline"
-                  colorScheme="danger"
-                  size="sm"
-                  isLoading={logoutLoading}
-                  isDisabled={logoutLoading}
-                />
-              </Box>
+              )} */}
             </VStack>
           </VStack>
 
           {/* Tab Buttons */}
           <HStack space="md" justifyContent="center">
-            <Pressable flex={1} onPress={() => setActiveTab("recipe")}>
+            <Pressable flex={1} onPress={() => setActiveTab("artikel")}>
               {({ pressed }) => (
                 <Box
                   bg={
-                    activeTab === "recipe"
+                    activeTab === "artikel"
                       ? warnaGlobal.primary
                       : "$transparent"
                   }
                   py="$2.5"
                   borderRadius="$lg"
                   alignItems="center"
-                  borderWidth={activeTab === "recipe" ? 0 : 1}
+                  borderWidth={activeTab === "artikel" ? 0 : 1}
                   borderColor={warnaGlobal.gray300}
                   opacity={pressed ? 0.8 : 1}
                 >
@@ -307,26 +365,26 @@ export default function ProfileTab() {
                     fontSize="$sm"
                     fontWeight="$semibold"
                     color={
-                      activeTab === "recipe"
+                      activeTab === "artikel"
                         ? warnaGlobal.whiteHex
                         : warnaGlobal.gray600
                     }
                   >
-                    Resep
+                    Artikel
                   </Text>
                 </Box>
               )}
             </Pressable>
-            <Pressable flex={1} onPress={() => setActiveTab("video")}>
+            <Pressable flex={1} onPress={() => setActiveTab("ulasan")}>
               {({ pressed }) => (
                 <Box
                   bg={
-                    activeTab === "video" ? warnaGlobal.primary : "$transparent"
+                    activeTab === "ulasan" ? warnaGlobal.primary : "$transparent"
                   }
                   py="$2.5"
                   borderRadius="$lg"
                   alignItems="center"
-                  borderWidth={activeTab === "video" ? 0 : 1}
+                  borderWidth={activeTab === "ulasan" ? 0 : 1}
                   borderColor={warnaGlobal.gray300}
                   opacity={pressed ? 0.8 : 1}
                 >
@@ -334,178 +392,210 @@ export default function ProfileTab() {
                     fontSize="$sm"
                     fontWeight="$medium"
                     color={
-                      activeTab === "video"
+                      activeTab === "ulasan"
                         ? warnaGlobal.whiteHex
                         : warnaGlobal.gray600
                     }
                   >
-                    Video
-                  </Text>
-                </Box>
-              )}
-            </Pressable>
-            <Pressable flex={1} onPress={() => setActiveTab("tag")}>
-              {({ pressed }) => (
-                <Box
-                  bg={
-                    activeTab === "tag" ? warnaGlobal.primary : "$transparent"
-                  }
-                  py="$2.5"
-                  borderRadius="$lg"
-                  alignItems="center"
-                  borderWidth={activeTab === "tag" ? 0 : 1}
-                  borderColor={warnaGlobal.gray300}
-                  opacity={pressed ? 0.8 : 1}
-                >
-                  <Text
-                    fontSize="$sm"
-                    fontWeight="$medium"
-                    color={
-                      activeTab === "tag"
-                        ? warnaGlobal.whiteHex
-                        : warnaGlobal.gray600
-                    }
-                  >
-                    Tag
+                    Ulasan
                   </Text>
                 </Box>
               )}
             </Pressable>
           </HStack>
 
-          {/* Recipe Cards - Horizontal Scroll */}
-          <Box>
-            <RNScrollView
-              horizontal={false}
-              showsVerticalScrollIndicator={false}
-            >
-              <VStack space="md">
-                {profileResep.map((recipe) => (
-                  <Pressable
-                    key={recipe.id}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/angela/detail",
-                        params: {
-                          id: recipe.id,
-                          name: recipe.name,
-                          rating: recipe.rating,
-                          time: recipe.time,
-                        },
-                      })
-                    }
+          {/* Tab Content: Artikel */}
+          {activeTab === "artikel" && (
+            <Box mt="$6">
+              {loadingArticles ? (
+                <Box alignItems="center" justifyContent="center" py="$10">
+                  <Spinner size="large" color={warnaGlobal.primaryHex} />
+                  <Text mt="$4" color={warnaGlobal.gray600}>
+                    Memuat artikel...
+                  </Text>
+                </Box>
+              ) : articles.length === 0 ? (
+                <Box alignItems="center" justifyContent="center" py="$10">
+                  <Ionicons
+                    name="document-text-outline"
+                    size={64}
+                    color={warnaGlobal.gray400}
+                  />
+                  <Text
+                    mt="$4"
+                    fontSize="$lg"
+                    fontWeight="$semibold"
+                    color={warnaGlobal.gray700}
                   >
-                    <Box
-                      bg={warnaGlobal.gray800Hex}
-                      borderRadius="$2xl"
-                      overflow="hidden"
-                      h={140}
-                      position="relative"
+                    Belum Ada Artikel
+                  </Text>
+                  <Text mt="$2" color={warnaGlobal.gray500} textAlign="center">
+                    Mulai berbagi pengetahuan dengan membuat artikel pertamamu
+                  </Text>
+                </Box>
+              ) : (
+                <VStack space="md">
+                  {articles.map((article, index) => (
+                    <Pressable
+                      key={article.id || index}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/najma/artikelDetail",
+                          params: { id: article.id },
+                        })
+                      }
                     >
-                      {/* Badge */}
-                      <Badge
-                        position="absolute"
-                        top="$3"
-                        right="$3"
-                        size="sm"
-                        variant="solid"
-                        borderRadius="$full"
-                        bg={warnaGlobal.amber400}
-                        zIndex={10}
-                        px="$2.5"
-                        py="$1"
-                      >
-                        <BadgeText
-                          color="$white"
-                          fontSize="$xs"
-                          fontWeight="$semibold"
-                        >
-                          {recipe.rating}
-                        </BadgeText>
-                      </Badge>
-
-                      {/* Content */}
                       <Box
-                        position="absolute"
-                        bottom="$4"
-                        left="$4"
-                        right="$4"
-                        zIndex={5}
+                        bg="$white"
+                        borderRadius="$xl"
+                        overflow="hidden"
+                        borderWidth={1}
+                        borderColor={warnaGlobal.gray200}
                       >
-                        <Text
-                          fontSize="$lg"
-                          fontWeight="$bold"
-                          color="$white"
-                          numberOfLines={2}
-                          mb="$1"
-                        >
-                          {recipe.name}
-                        </Text>
-                        <HStack space="sm" alignItems="center">
-                          <Text fontSize="$xs" color={warnaGlobal.gray300}>
-                            By {recipe.author}
-                          </Text>
-                          <HStack space="xs" alignItems="center">
-                            <Ionicons
-                              name="time-outline"
-                              size={14}
-                              color="white"
+                        {/* Thumbnail */}
+                        {article.thumbnail && (
+                          <Box h={180} w="$full" bg={warnaGlobal.gray100}>
+                            <Image
+                              source={{ uri: article.thumbnail }}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                resizeMode: "cover",
+                              }}
                             />
-                            <Text fontSize="$xs" color="$white">
-                              {recipe.time}
+                          </Box>
+                        )}
+
+                        {/* Content */}
+                        <Box p="$4">
+                          {/* Category Badge */}
+                          {article.category && (
+                            <Badge
+                              size="sm"
+                              variant="solid"
+                              borderRadius="$md"
+                              bg={warnaGlobal.primaryHex}
+                              mb="$2"
+                              alignSelf="flex-start"
+                            >
+                              <BadgeText
+                                color="$white"
+                                fontSize="$xs"
+                                fontWeight="$medium"
+                              >
+                                {article.category}
+                              </BadgeText>
+                            </Badge>
+                          )}
+
+                          {/* Title */}
+                          <Text
+                            fontSize="$xl"
+                            fontWeight="$bold"
+                            color={warnaGlobal.gray900}
+                            numberOfLines={2}
+                            mb="$2"
+                          >
+                            {article.title}
+                          </Text>
+
+                          {/* Excerpt */}
+                          {article.content && (
+                            <Text
+                              fontSize="$sm"
+                              color={warnaGlobal.gray600}
+                              numberOfLines={2}
+                              mb="$3"
+                            >
+                              {article.content}
+                            </Text>
+                          )}
+
+                          {/* Meta Info */}
+                          <HStack
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mt="$2"
+                          >
+                            <HStack space="md" alignItems="center">
+                              <HStack space="xs" alignItems="center">
+                                <Ionicons
+                                  name="eye-outline"
+                                  size={16}
+                                  color={warnaGlobal.gray500}
+                                />
+                                <Text fontSize="$xs" color={warnaGlobal.gray600}>
+                                  {article.views || 0}
+                                </Text>
+                              </HStack>
+                              <HStack space="xs" alignItems="center">
+                                <Ionicons
+                                  name="heart-outline"
+                                  size={16}
+                                  color={warnaGlobal.gray500}
+                                />
+                                <Text fontSize="$xs" color={warnaGlobal.gray600}>
+                                  {article.likes || 0}
+                                </Text>
+                              </HStack>
+                            </HStack>
+
+                            <Text fontSize="$xs" color={warnaGlobal.gray500}>
+                              {article.createdAt?.toDate
+                                ? new Date(
+                                    article.createdAt.toDate()
+                                  ).toLocaleDateString("id-ID", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  })
+                                : "Baru saja"}
                             </Text>
                           </HStack>
-                        </HStack>
-                      </Box>
-
-                      {/* Bookmark */}
-                      <Pressable
-                        position="absolute"
-                        bottom="$4"
-                        right="$4"
-                        zIndex={10}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          setBookmarkedRecipes((prev) =>
-                            prev.includes(recipe.id)
-                              ? prev.filter((id) => id !== recipe.id)
-                              : [...prev, recipe.id]
-                          );
-                        }}
-                      >
-                        <Box
-                          bg={
-                            bookmarkedRecipes.includes(recipe.id)
-                              ? warnaGlobal.lightHex
-                              : "$white"
-                          }
-                          w={32}
-                          h={32}
-                          borderRadius="$full"
-                          alignItems="center"
-                          justifyContent="center"
-                        >
-                          <Ionicons
-                            name={
-                              bookmarkedRecipes.includes(recipe.id)
-                                ? "bookmark"
-                                : "bookmark-outline"
-                            }
-                            size={16}
-                            color={
-                              bookmarkedRecipes.includes(recipe.id)
-                                ? warnaGlobal.primaryHex
-                                : warnaGlobal.gray700Hex
-                            }
-                          />
                         </Box>
-                      </Pressable>
-                    </Box>
-                  </Pressable>
-                ))}
-              </VStack>
-            </RNScrollView>
-          </Box>
+                      </Box>
+                    </Pressable>
+                  ))}
+                </VStack>
+              )}
+            </Box>
+          )}
+
+          {/* Tab Content: Ulasan */}
+          {activeTab === "ulasan" && (
+            <Box mt="$6">
+              <Box alignItems="center" justifyContent="center" py="$10">
+                <Ionicons
+                  name="chatbubbles-outline"
+                  size={64}
+                  color={warnaGlobal.gray400}
+                />
+                <Text
+                  mt="$4"
+                  fontSize="$lg"
+                  fontWeight="$semibold"
+                  color={warnaGlobal.gray700}
+                >
+                  Belum Ada Ulasan
+                </Text>
+                <Text mt="$2" color={warnaGlobal.gray500} textAlign="center">
+                  Ulasan yang kamu berikan akan muncul di sini
+                </Text>
+              </Box>
+            </Box>
+          )}
+
+          {/* FAB Button untuk Buat Artikel */}
+          {activeTab === "artikel" && (
+            <Fab
+              size="lg"
+              placement="bottom right"
+              bg={warnaGlobal.primaryHex}
+              onPress={() => router.push("/artikel/create-artikel")}
+            >
+              <FabIcon as={AddIcon} color="$white" />
+            </Fab>
+          )}
         </VStack>
       </Container>
       )}

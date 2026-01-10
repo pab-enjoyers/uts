@@ -14,11 +14,17 @@ import { getUserProfile, updateUserProfile, uploadProfilePhoto } from '../../ser
 import * as ImagePicker from 'expo-image-picker';
 
 export default function AccountScreen() {
-  const { user, updateUserPassword } = useAuth();
+  const { user, updateUserPassword, refreshUserProfile } = useAuth();
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' or 'password'
   
   // Profile data
   const [nama, setNama] = useState('');
+  const [status, setStatus] = useState('');
   const [bio, setBio] = useState('');
+  const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
   const [photoURL, setPhotoURL] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,7 +48,10 @@ export default function AccountScreen() {
       
       if (result.success && result.data) {
         setNama(result.data.nama || '');
+        setStatus(result.data.status || '');
         setBio(result.data.bio || '');
+        setPhone(result.data.phone || '');
+        setLocation(result.data.location || '');
         setPhotoURL(result.data.photoURL || '');
       }
     } catch (error) {
@@ -102,12 +111,17 @@ export default function AccountScreen() {
       
       const updates = {
         nama: nama.trim(),
+        status: status.trim(),
         bio: bio.trim(),
+        phone: phone.trim(),
+        location: location.trim(),
       };
       
       const result = await updateUserProfile(user.uid, updates);
       
       if (result.success) {
+        // Refresh user profile di AuthContext
+        await refreshUserProfile();
         Alert.alert('Berhasil', 'Profil berhasil diupdate');
       } else {
         Alert.alert('Error', result.error || 'Gagal update profil');
@@ -159,9 +173,9 @@ export default function AccountScreen() {
 
   if (loading) {
     return (
-      <Container bg={warnaGlobal.light}>
+      <Container bg="$white">
         {/* Header */}
-        <Box bg="$white" borderBottomWidth={1} borderBottomColor={warnaGlobal.gray200}>
+        <Box bg="$white" borderBottomWidth={1} borderBottomColor={warnaGlobal.gray200} mt="$12">
           <HStack alignItems="center" px="$4" py="$3" space="md">
             <Pressable onPress={() => router.back()} p="$2">
               <Ionicons name="chevron-back" size={24} color={warnaGlobal.gray900} />
@@ -183,9 +197,9 @@ export default function AccountScreen() {
   }
 
   return (
-    <Box flex={1} bg={warnaGlobal.light}>
+    <Box flex={1} bg={warnaGlobal.gray50}>
       {/* Header */}
-      <Box bg="$white" borderBottomWidth={1} borderBottomColor={warnaGlobal.gray200}>
+      <Box bg="$white" borderBottomWidth={1} borderBottomColor={warnaGlobal.gray200} mt="$12">
         <HStack alignItems="center" px="$4" py="$3" space="md">
           <Pressable onPress={() => router.back()} p="$2">
             <Ionicons name="chevron-back" size={24} color={warnaGlobal.gray900} />
@@ -196,7 +210,7 @@ export default function AccountScreen() {
         </HStack>
       </Box>
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1, backgroundColor: warnaGlobal.gray50 }} showsVerticalScrollIndicator={false}>
         <VStack p="$5" space="lg">
           {/* Profile Photo Card */}
           <Box bg="$white" borderRadius="$2xl" p="$5" shadowColor="$black" shadowOpacity={0.05} shadowRadius={10}>
@@ -255,8 +269,65 @@ export default function AccountScreen() {
             </VStack>
           </Box>
 
-          {/* Profile Info Card */}
-          <Box bg="$white" borderRadius="$2xl" p="$5" shadowColor="$black" shadowOpacity={0.05} shadowRadius={10}>
+          {/* Tab Switcher */}
+          <HStack space="md">
+            <Pressable 
+              flex={1} 
+              onPress={() => setActiveTab('profile')}
+              bg={activeTab === 'profile' ? warnaGlobal.primary : '$white'}
+              py="$3"
+              borderRadius="$xl"
+              alignItems="center"
+              borderWidth={1}
+              borderColor={activeTab === 'profile' ? warnaGlobal.primary : warnaGlobal.gray200}
+            >
+              <HStack space="xs" alignItems="center">
+                <Ionicons 
+                  name="person-outline" 
+                  size={18} 
+                  color={activeTab === 'profile' ? '#FFFFFF' : warnaGlobal.gray600} 
+                />
+                <Text 
+                  color={activeTab === 'profile' ? '$white' : warnaGlobal.gray600}
+                  fontSize="$sm"
+                  fontWeight="$semibold"
+                >
+                  Informasi Profil
+                </Text>
+              </HStack>
+            </Pressable>
+
+            <Pressable 
+              flex={1} 
+              onPress={() => setActiveTab('password')}
+              bg={activeTab === 'password' ? warnaGlobal.primary : '$white'}
+              py="$3"
+              borderRadius="$xl"
+              alignItems="center"
+              borderWidth={1}
+              borderColor={activeTab === 'password' ? warnaGlobal.primary : warnaGlobal.gray200}
+            >
+              <HStack space="xs" alignItems="center">
+                <Ionicons 
+                  name="key-outline" 
+                  size={18} 
+                  color={activeTab === 'password' ? '#FFFFFF' : warnaGlobal.gray600} 
+                />
+                <Text 
+                  color={activeTab === 'password' ? '$white' : warnaGlobal.gray600}
+                  fontSize="$sm"
+                  fontWeight="$semibold"
+                >
+                  Ubah Password
+                </Text>
+              </HStack>
+            </Pressable>
+          </HStack>
+
+          {/* Tab Content */}
+          {activeTab === 'profile' ? (
+            // PROFILE INFO TAB
+            <Box bg="$white" borderRadius="$2xl" p="$5" shadowColor="$black" shadowOpacity={0.05} shadowRadius={10}>
             <VStack space="lg">
               <Text fontSize="$lg" fontWeight="$bold" color={warnaGlobal.gray900}>
                 Informasi Profil
@@ -279,6 +350,30 @@ export default function AccountScreen() {
                       value={nama}
                       onChangeText={setNama}
                       placeholder="Masukkan nama lengkap"
+                      placeholderTextColor={warnaGlobal.gray400}
+                      style={styles.input}
+                    />
+                  </HStack>
+                </Box>
+              </VStack>
+
+              {/* Status Input */}
+              <VStack space="xs">
+                <Text fontSize="$sm" fontWeight="$medium" color={warnaGlobal.gray700}>
+                  Status / Role
+                </Text>
+                <Box 
+                  bg={warnaGlobal.gray50} 
+                  borderRadius="$xl" 
+                  borderWidth={1}
+                  borderColor={warnaGlobal.gray200}
+                >
+                  <HStack alignItems="center" px="$4" py="$3" space="sm">
+                    <Ionicons name="star-outline" size={20} color={warnaGlobal.gray600} />
+                    <TextInput
+                      value={status}
+                      onChangeText={setStatus}
+                      placeholder="Contoh: Chef Amatir, Food Blogger"
                       placeholderTextColor={warnaGlobal.gray400}
                       style={styles.input}
                     />
@@ -312,6 +407,55 @@ export default function AccountScreen() {
                 </Box>
               </VStack>
 
+              {/* Phone Input */}
+              <VStack space="xs">
+                <Text fontSize="$sm" fontWeight="$medium" color={warnaGlobal.gray700}>
+                  Nomor Telepon
+                </Text>
+                <Box 
+                  bg={warnaGlobal.gray50} 
+                  borderRadius="$xl" 
+                  borderWidth={1}
+                  borderColor={warnaGlobal.gray200}
+                >
+                  <HStack alignItems="center" px="$4" py="$3" space="sm">
+                    <Ionicons name="call-outline" size={20} color={warnaGlobal.gray600} />
+                    <TextInput
+                      value={phone}
+                      onChangeText={setPhone}
+                      placeholder="Contoh: 08123456789"
+                      placeholderTextColor={warnaGlobal.gray400}
+                      keyboardType="phone-pad"
+                      style={styles.input}
+                    />
+                  </HStack>
+                </Box>
+              </VStack>
+
+              {/* Location Input */}
+              <VStack space="xs">
+                <Text fontSize="$sm" fontWeight="$medium" color={warnaGlobal.gray700}>
+                  Lokasi
+                </Text>
+                <Box 
+                  bg={warnaGlobal.gray50} 
+                  borderRadius="$xl" 
+                  borderWidth={1}
+                  borderColor={warnaGlobal.gray200}
+                >
+                  <HStack alignItems="center" px="$4" py="$3" space="sm">
+                    <Ionicons name="location-outline" size={20} color={warnaGlobal.gray600} />
+                    <TextInput
+                      value={location}
+                      onChangeText={setLocation}
+                      placeholder="Contoh: Jakarta, Indonesia"
+                      placeholderTextColor={warnaGlobal.gray400}
+                      style={styles.input}
+                    />
+                  </HStack>
+                </Box>
+              </VStack>
+
               {/* Save Button */}
               <Pressable onPress={handleSaveProfile} disabled={saving}>
                 <Box 
@@ -332,9 +476,9 @@ export default function AccountScreen() {
               </Pressable>
             </VStack>
           </Box>
-
-          {/* Change Password Card */}
-          <Box bg="$white" borderRadius="$2xl" p="$5" shadowColor="$black" shadowOpacity={0.05} shadowRadius={10}>
+          ) : (
+            // PASSWORD CHANGE TAB
+            <Box bg="$white" borderRadius="$2xl" p="$5" shadowColor="$black" shadowOpacity={0.05} shadowRadius={10}>
             <VStack space="lg">
               <Text fontSize="$lg" fontWeight="$bold" color={warnaGlobal.gray900}>
                 Ubah Password
@@ -446,6 +590,7 @@ export default function AccountScreen() {
               </Pressable>
             </VStack>
           </Box>
+          )}
 
           {/* Bottom spacing */}
           <Box h="$8" />

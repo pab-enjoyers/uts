@@ -489,11 +489,20 @@ export default function HomePage() {
                   Mau masak apa hari ini?
                 </Text>
               </VStack>
-              <Avatar size="md" bg={warnaGlobal.light}>
-                <Text fontSize="$xl">
-                  <Ionicons name="person" size={24} color="white" />
-                </Text>
-              </Avatar>
+              {user?.photoURL ? (
+                <Avatar size="md">
+                  <Image 
+                    source={{ uri: user.photoURL }} 
+                    style={{ width: '100%', height: '100%', borderRadius: 999 }}
+                  />
+                </Avatar>
+              ) : (
+                <Avatar size="md" bg={warnaGlobal.primary}>
+                  <Text fontSize="$xl" color="$white" fontWeight="$bold">
+                    {(user?.nama || user?.email || 'U').charAt(0).toUpperCase()}
+                  </Text>
+                </Avatar>
+              )}
             </HStack>
 
             {/* Search Bar */}

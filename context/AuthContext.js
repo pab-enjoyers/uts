@@ -279,6 +279,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Refresh user profile dari Firestore
+   * Digunakan setelah update profile
+   */
+  const refreshUserProfile = async () => {
+    if (!user || !user.uid) return;
+    
+    try {
+      const profileResult = await getUserProfile(user.uid);
+      if (profileResult.success && profileResult.data) {
+        setUser({
+          uid: user.uid,
+          email: user.email,
+          ...profileResult.data,
+        });
+        
+        // Update AsyncStorage juga
+        await saveUserData({
+          uid: user.uid,
+          email: user.email,
+          ...profileResult.data,
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
+    }
+  };
+
   // Context value
   const value = {
     user,
@@ -291,6 +319,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkAuthStatus,
     updateUserPassword,
+    refreshUserProfile,
   };
 
   return (
