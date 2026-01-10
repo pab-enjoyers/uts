@@ -5,11 +5,12 @@
 
 import React, { useState, useEffect } from "react";
 import { ScrollView as RNScrollView, Image, Alert, RefreshControl } from "react-native";
-import { Container, warnaGlobal, RecipeListItem, CustomButton } from "../../styles";
+import { Container, warnaGlobal, RecipeListItem, CustomButton, Card } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { getBookmarks, removeBookmark } from "../../services/userService";
+import { getMealById, estimateCookingTime } from "../../services/mealService";
 
 import {
   VStack,
@@ -26,6 +27,9 @@ export default function BookmarkTab() {
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     if (user) {
@@ -35,6 +39,15 @@ export default function BookmarkTab() {
     }
   }, [user]);
 
+  // Auto-refresh bookmarks ketika tab dibuka (setelah bookmark dari screen lain)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user) {
+        loadBookmarks();
+      }
+    }, [user])
+  );
+
   const loadBookmarks = async () => {
     if (!user) return;
 
@@ -43,17 +56,40 @@ export default function BookmarkTab() {
       const result = await getBookmarks(user.uid);
 
       if (result.success && result.bookmarks) {
-        // Convert to recipe format
-        const recipes = result.bookmarks.map((bookmark) => ({
-          id: bookmark.mealId,
-          name: bookmark.mealName,
-          image: bookmark.mealThumb || "🍽️",
-          category: bookmark.category,
-          area: bookmark.area,
-          rating: (Math.random() * 2 + 3).toFixed(1),
-          time: `${Math.floor(Math.random() * 30 + 15)} Mins`,
-        }));
-        setBookmarks(recipes);
+        // Fetch full meal data untuk estimasi waktu yang akurat
+        const recipesPromises = result.bookmarks.map(async (bookmark) => {
+          try {
+            const mealResult = await getMealById(bookmark.mealId);
+            if (mealResult.success && mealResult.meal) {
+              return {
+                id: bookmark.mealId,
+                name: bookmark.mealName,
+                image: bookmark.mealThumb || "🍽️",
+                category: bookmark.category,
+                area: bookmark.area,
+                rating: "4.5",
+                time: estimateCookingTime(mealResult.meal), // Estimasi akurat
+                author: `${bookmark.area} Cuisine`,
+              };
+            }
+          } catch (error) {
+            console.log("Error fetching meal detail:", bookmark.mealId);
+          }
+          // Fallback jika API error
+          return {
+            id: bookmark.mealId,
+            name: bookmark.mealName,
+            image: bookmark.mealThumb || "🍽️",
+            category: bookmark.category,
+            area: bookmark.area,
+            rating: "4.5",
+            time: "30 menit",
+            author: `${bookmark.area} Cuisine`,
+          };
+        });
+
+        const recipes = await Promise.all(recipesPromises);
+        setBookmarks(recipes.filter(Boolean)); // Filter null values
       }
     } catch (error) {
       console.error("Error loading bookmarks:", error);
@@ -174,51 +210,144 @@ export default function BookmarkTab() {
       >
         <VStack space="lg" px="$5" py="$6" pb="$24">
           {/* Header */}
-          <VStack space="xs">
+          <VStack space="sm">
             <Heading size="2xl" fontWeight="$bold">
-              Bookmark
+              Resep Tersimpan
             </Heading>
-            <Text color={warnaGlobal.gray600}>
-              {bookmarks.length} resep tersimpan
-            </Text>
+            <HStack alignItems="center" space="xs">
+              <Ionicons name="bookmark" size={16} color={warnaGlobal.primary} />
+              <Text color={warnaGlobal.gray600} fontSize="$sm">
+                {bookmarks.length} resep
+              </Text>
+            </HStack>
           </VStack>
 
           {/* Bookmarks List */}
           <VStack space="md">
-            {bookmarks.map((recipe) => (
+            {bookmarks.slice(0, page * ITEMS_PER_PAGE).map((recipe, index) => (
               <Box key={recipe.id} position="relative">
-                <RecipeListItem
-                  recipe={recipe}
-                  onPress={() =>
+                {/* Recipe Card - Direct Pressable */}
+                <Pressable
+                  onPress={() => {
                     router.push({
                       pathname: "/recipe-detail",
                       params: { mealId: recipe.id },
-                    })
-                  }
-                />
-
-                {/* Delete Button Overlay */}
-                <Pressable
-                  position="absolute"
-                  top={10}
-                  right={10}
-                  onPress={() => handleRemoveBookmark(recipe.id)}
+                    });
+                  }}
+                  sx={{
+                    ':active': {
+                      transform: [{ scale: 0.98 }],
+                    },
+                  }}
                 >
-                  <Box
-                    bg="rgba(239, 68, 68, 0.9)"
-                    p="$2"
-                    borderRadius="$lg"
-                    w={32}
-                    h={32}
-                    justifyContent="center"
+                  <HStack
+                    space="md"
+                    bg={warnaGlobal.gray50}
+                    borderRadius="$xl"
+                    p="$3"
                     alignItems="center"
                   >
-                    <Ionicons name="trash-outline" size={16} color="white" />
+                    {/* Recipe Image */}
+                    <Box
+                      bg={warnaGlobal.gray200}
+                      borderRadius="$xl"
+                      w={70}
+                      h={70}
+                      justifyContent="center"
+                      alignItems="center"
+                      overflow="hidden"
+                    >
+                      {recipe.image && (recipe.image.startsWith('http') || recipe.image.startsWith('https')) ? (
+                        <Image
+                          source={{ uri: recipe.image }}
+                          style={{
+                            width: 70,
+                            height: 70,
+                            resizeMode: 'cover'
+                          }}
+                        />
+                      ) : (
+                        <Text fontSize={36}>{recipe.image || '🍽️'}</Text>
+                      )}
+                    </Box>
+
+                    {/* Recipe Info */}
+                    <VStack flex={1} space="xs">
+                      <Text fontSize="$sm" fontWeight="$bold" numberOfLines={2} ellipsizeMode="tail" lineHeight="$sm">
+                        {recipe.name}
+                      </Text>
+                      
+                      {/* Star Rating */}
+                      <HStack space="xs" alignItems="center">
+                        {[...Array(5)].map((_, i) => (
+                          <Ionicons
+                            key={i}
+                            name={i < parseInt(recipe.rating) ? 'star' : 'star-outline'}
+                            size={14}
+                            color={warnaGlobal.amber400Hex}
+                          />
+                        ))}
+                      </HStack>
+                      
+                      <Text fontSize="$xs" color={warnaGlobal.gray500}>
+                        {recipe.author}
+                      </Text>
+                      
+                      {/* Time Info */}
+                      <HStack space="xs" alignItems="center">
+                        <Ionicons name="timer-outline" size={13} color={warnaGlobal.gray500Hex} />
+                        <Text fontSize="$xs" color={warnaGlobal.gray600}>
+                          {recipe.time}
+                        </Text>
+                      </HStack>
+                    </VStack>
+                  </HStack>
+                </Pressable>
+
+                {/* Delete Button - Rounded Rectangle (not circle) */}
+                <Pressable
+                  position="absolute"
+                  bottom={10}
+                  right={10}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleRemoveBookmark(recipe.id);
+                  }}
+                  sx={{
+                    ':active': {
+                      transform: [{ scale: 0.9 }],
+                    },
+                  }}
+                >
+                  <Box
+                    bg="rgba(239, 68, 68, 0.95)"
+                    px="$3"
+                    py="$2"
+                    borderRadius="$lg"
+                    justifyContent="center"
+                    alignItems="center"
+                    shadowColor="$black"
+                    shadowOffset={{ width: 0, height: 2 }}
+                    shadowOpacity={0.2}
+                    shadowRadius={4}
+                  >
+                    <Ionicons name="trash" size={16} color="white" />
                   </Box>
                 </Pressable>
               </Box>
             ))}
           </VStack>
+
+          {/* Load More Button */}
+          {bookmarks.length > page * ITEMS_PER_PAGE && (
+            <CustomButton
+              variant="outline"
+              onPress={() => setPage(page + 1)}
+              mt="$4"
+            >
+              Muat Lebih Banyak ({bookmarks.length - (page * ITEMS_PER_PAGE)} resep)
+            </CustomButton>
+          )}
         </VStack>
       </RNScrollView>
     </Container>

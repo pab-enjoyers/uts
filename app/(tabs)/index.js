@@ -8,7 +8,7 @@ import {
   CategoryChip,
 } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 
 // API Services
@@ -86,6 +86,15 @@ export default function HomePage() {
       loadUserBookmarks();
     }
   }, [user]);
+
+  // Auto-refresh bookmarks ketika kembali ke screen ini (after unbookmark di screen lain)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user) {
+        loadUserBookmarks();
+      }
+    }, [user])
+  );
 
   const loadInitialData = async () => {
     try {
