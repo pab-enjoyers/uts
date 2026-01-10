@@ -20,8 +20,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { profileResep } from "../../data/profile";
 import { useAuth } from "../../context/AuthContext";
-import { getBookmarks } from "../../services/userService";
+import { getBookmarks, updateUserProfile } from "../../services/userService";
 import { getArtikelByUser } from "../../services/artikelService";
+import { uploadProfilePhotoToCloudinary } from "../../services/cloudinaryService";
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileTab() {
   // State untuk bookmark dan active tab (Props & State requirement)
@@ -34,6 +36,9 @@ export default function ProfileTab() {
   // Artikel state
   const [articles, setArticles] = React.useState([]);
   const [loadingArticles, setLoadingArticles] = React.useState(false);
+  
+  // Photo upload state
+  const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
   
   // Auth context
   const { user, refreshUserProfile } = useAuth();
@@ -115,6 +120,51 @@ export default function ProfileTab() {
       loadUserArticles();
     }
   }, [activeTab]);
+
+  /**
+   * Pick and upload profile photo
+   */
+  const pickImage = async () => {
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Izin Diperlukan', 'Izin akses foto diperlukan untuk memilih gambar.');
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setUploadingPhoto(true);
+        
+        // Upload to Cloudinary (FREE!)
+        const uploadResult = await uploadProfilePhotoToCloudinary(user.uid, result.assets[0].uri);
+        
+        if (uploadResult.success) {
+          // Update profile di Firestore dengan URL dari Cloudinary
+          await updateUserProfile(user.uid, { photoURL: uploadResult.photoURL });
+          // Refresh user profile
+          await refreshUserProfile();
+          Alert.alert('Berhasil', 'Foto profil berhasil diupdate');
+        } else {
+          Alert.alert('Error', uploadResult.error || 'Gagal upload foto');
+        }
+        
+        setUploadingPhoto(false);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Gagal memilih foto');
+      setUploadingPhoto(false);
+    }
+  };
 
   /**
    * Handle logout dengan konfirmasi
@@ -211,46 +261,77 @@ export default function ProfileTab() {
           <VStack space="sm">
             {/* Avatar + Stats in Row */}
             <HStack space="lg" alignItems="center" w="$full">
-              {/* Avatar di kiri */}
-              <Box
-                w={100}
-                h={100}
-                borderRadius="$full"
-                overflow="hidden"
-                bg={warnaGlobal.gray100}
-                justifyContent="center"
-                alignItems="center"
-              >
-                {user?.photoURL ? (
-                  <Image
-                    source={{ uri: user.photoURL }}
-                    style={{ width: "100%", height: "100%" }}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Text fontSize={42} color={warnaGlobal.primary}>
-                    {(user?.nama || user?.email || 'U').charAt(0).toUpperCase()}
-                  </Text>
-                )}
-              </Box>
+              {/* Avatar di kiri - Clickable untuk upload */}
+              <Pressable onPress={pickImage}>
+                <Box
+                  w={100}
+                  h={100}
+                  borderRadius="$full"
+                  overflow="hidden"
+                  bg={warnaGlobal.gray100}
+                  justifyContent="center"
+                  alignItems="center"
+                  position="relative"
+                >
+                  {user?.photoURL ? (
+                    <Image
+                      source={{ uri: user.photoURL }}
+                      style={{ width: "100%", height: "100%" }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text fontSize={42} color={warnaGlobal.primaryHex}>
+                      {(user?.nama || user?.email || 'U').charAt(0).toUpperCase()}
+                    </Text>
+                  )}
+                  {/* Upload overlay */}
+                  {uploadingPhoto ? (
+                    <Box
+                      position="absolute"
+                      w="$full"
+                      h="$full"
+                      bg="rgba(0,0,0,0.5)"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Spinner size="small" color="$white" />
+                    </Box>
+                  ) : (
+                    <Box
+                      position="absolute"
+                      bottom={0}
+                      w="$full"
+                      bg="rgba(0,0,0,0.5)"
+                      py="$1"
+                      alignItems="center"
+                    >
+                      <Ionicons name="camera" size={16} color="white" />
+                    </Box>
+                  )}
+                </Box>
+              </Pressable>
 
               {/* Stats di kanan */}
               <HStack space="lg" flex={1} justifyContent="space-around">
                 <VStack alignItems="center">
-                  <Text
-                    fontSize="$lg"
-                    fontWeight="$bold"
-                    color={warnaGlobal.gray900}
-                  >
-                    {user?.recipesCount || 0}
-                  </Text>
+                  {loadingArticles ? (
+                    <Spinner size="small" color={warnaGlobal.primaryHex} />
+                  ) : (
+                    <Text
+                      fontSize="$lg"
+                      fontWeight="$bold"
+                      color={warnaGlobal.gray900}
+                    >
+                      {articles.length}
+                    </Text>
+                  )}
                   <Text fontSize="$xs" color={warnaGlobal.gray500} mt="$1">
-                    Resep
+                    Artikel
                   </Text>
                 </VStack>
                 <VStack alignItems="center">
                   {loadingStats ? (
-                    <Spinner size="small" color={warnaGlobal.primary} />
+                    <Spinner size="small" color={warnaGlobal.primaryHex} />
                   ) : (
                     <Text
                       fontSize="$lg"
@@ -270,10 +351,10 @@ export default function ProfileTab() {
                     fontWeight="$bold"
                     color={warnaGlobal.gray900}
                   >
-                    {user?.followingCount || 0}
+                    0
                   </Text>
                   <Text fontSize="$xs" color={warnaGlobal.gray500} mt="$1">
-                    Mengikuti
+                    Ulasan
                   </Text>
                 </VStack>
               </HStack>

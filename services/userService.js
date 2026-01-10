@@ -123,22 +123,43 @@ export const updateUserProfile = async (uid, updates) => {
  */
 export const uploadProfilePhoto = async (uid, imageUri) => {
   try {
+    console.log('📸 Starting profile photo upload for:', uid);
+    console.log('📸 Image URI:', imageUri);
+    
+    // Check if storage is available
+    if (!storage) {
+      console.error('❌ Firebase Storage not initialized');
+      return {
+        success: false,
+        error: 'Firebase Storage tidak tersedia. Periksa konfigurasi Firebase.'
+      };
+    }
+    
     // Convert image URI to blob
+    console.log('📸 Fetching image...');
     const response = await fetch(imageUri);
     const blob = await response.blob();
+    console.log('📸 Blob created, size:', blob.size);
     
     // Create reference to storage
     const filename = `profile_${uid}_${Date.now()}.jpg`;
     const storageRef = ref(storage, `profile_photos/${filename}`);
+    console.log('📸 Storage ref created:', filename);
     
     // Upload file
+    console.log('📸 Uploading to Firebase Storage...');
     await uploadBytes(storageRef, blob);
+    console.log('📸 Upload complete!');
     
     // Get download URL
+    console.log('📸 Getting download URL...');
     const downloadURL = await getDownloadURL(storageRef);
+    console.log('📸 Download URL:', downloadURL);
     
     // Update user profile with photo URL
+    console.log('📸 Updating user profile...');
     await updateUserProfile(uid, { photoURL: downloadURL });
+    console.log('📸 Profile updated successfully!');
     
     return {
       success: true,
@@ -146,10 +167,25 @@ export const uploadProfilePhoto = async (uid, imageUri) => {
     };
   } catch (error) {
     const errorInfo = handleFirebaseError(error);
-    console.error('Error uploading profile photo:', errorInfo);
+    console.error('❌ Error uploading profile photo:', errorInfo);
+    console.error('❌ Full error:', error);
+    
+    // Check for specific storage errors
+    if (error.code === 'storage/unauthorized') {
+      return {
+        success: false,
+        error: 'Tidak memiliki izin untuk upload. Periksa Firebase Storage Rules.'
+      };
+    } else if (error.code === 'storage/unknown') {
+      return {
+        success: false,
+        error: 'Error Firebase Storage. Pastikan Storage Rules sudah diatur dengan benar.'
+      };
+    }
+    
     return {
       success: false,
-      error: errorInfo.message
+      error: errorInfo.message || 'Gagal upload foto profil'
     };
   }
 };

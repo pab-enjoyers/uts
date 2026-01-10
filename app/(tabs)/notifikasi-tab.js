@@ -284,8 +284,8 @@ export default function NotificationsPage() {
       
       {/* Not logged in view - Sama seperti Bookmark */}
       {!user ? (
-        <Container scrollable bg="$white" padding="$0">
-          <VStack flex={1} justifyContent="center" alignItems="center" p="$5" mt="$48">
+        <Container>
+          <VStack flex={1} justifyContent="center" alignItems="center" p="$5">
             <Ionicons
               name="notifications-off-outline"
               size={80}
@@ -318,11 +318,41 @@ export default function NotificationsPage() {
           </VStack>
         </Container>
       ) : loading ? (
-        <Container scrollable bg="$white" padding="$0">
-          <VStack flex={1} justifyContent="center" alignItems="center" mt="$48">
+        <Container>
+          <VStack flex={1} justifyContent="center" alignItems="center">
             <Spinner size="large" color={warnaGlobal.primaryHex} />
             <Text color={warnaGlobal.gray500} mt="$3">
               Memuat notifikasi...
+            </Text>
+          </VStack>
+        </Container>
+      ) : filteredNotifications.length === 0 ? (
+        <Container>
+          <VStack flex={1} justifyContent="center" alignItems="center" p="$5">
+            <Ionicons
+              name="notifications-outline"
+              size={80}
+              color={warnaGlobal.gray400Hex}
+            />
+            <Text
+              fontSize="$lg"
+              fontWeight="$bold"
+              color={warnaGlobal.gray900}
+              mt="$4"
+              textAlign="center"
+            >
+              {activeTab === "belum dibaca" 
+                ? "Tidak Ada Notifikasi Baru" 
+                : activeTab === "dibaca"
+                ? "Belum Ada yang Dibaca"
+                : "Belum Ada Notifikasi"}
+            </Text>
+            <Text color={warnaGlobal.gray600} textAlign="center" mt="$2">
+              {activeTab === "belum dibaca"
+                ? "Semua notifikasi sudah dibaca"
+                : activeTab === "dibaca"
+                ? "Notifikasi yang sudah Anda baca akan muncul di sini"
+                : "Notifikasi baru akan muncul di sini"}
             </Text>
           </VStack>
         </Container>
@@ -415,42 +445,6 @@ export default function NotificationsPage() {
                   />
                 ))}
               </VStack>
-            </VStack>
-          )}
-
-          {/* Empty State - Sama seperti Bookmark (tanpa tombol) */}
-          {filteredNotifications.length === 0 && (
-            <VStack flex={1} justifyContent="center" alignItems="center" p="$5" py="$16">
-              <Ionicons
-                name="notifications-outline"
-                size={80}
-                color={warnaGlobal.gray400Hex}
-              />
-              <Text
-                fontSize="$lg"
-                fontWeight="$bold"
-                color={warnaGlobal.gray900}
-                mt="$4"
-                textAlign="center"
-              >
-                {activeTab === "belum dibaca" 
-                  ? "Tidak Ada Notifikasi Baru" 
-                  : activeTab === "dibaca"
-                  ? "Belum Ada yang Dibaca"
-                  : "Belum Ada Notifikasi"}
-              </Text>
-              <Text 
-                fontSize="$sm" 
-                color={warnaGlobal.gray600} 
-                mt="$2"
-                textAlign="center"
-              >
-                {activeTab === "belum dibaca"
-                  ? "Semua notifikasi sudah dibaca"
-                  : activeTab === "dibaca"
-                  ? "Notifikasi yang sudah Anda baca akan muncul di sini"
-                  : "Notifikasi baru akan muncul di sini"}
-              </Text>
             </VStack>
           )}
         </VStack>

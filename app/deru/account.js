@@ -10,7 +10,8 @@ import { router } from 'expo-router';
 import { Container, warnaGlobal } from '../../styles';
 import { VStack, HStack, Box, Text, Pressable, Heading, Avatar, AvatarImage } from '@gluestack-ui/themed';
 import { useAuth } from '../../context/AuthContext';
-import { getUserProfile, updateUserProfile, uploadProfilePhoto } from '../../services/userService';
+import { getUserProfile, updateUserProfile } from '../../services/userService';
+import { uploadProfilePhotoToCloudinary } from '../../services/cloudinaryService';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function AccountScreen() {
@@ -81,11 +82,13 @@ export default function AccountScreen() {
       if (!result.canceled && result.assets && result.assets[0]) {
         setUploadingPhoto(true);
         
-        // Upload to Firebase Storage
-        const uploadResult = await uploadProfilePhoto(user.uid, result.assets[0].uri);
+        // Upload to Cloudinary (FREE!)
+        const uploadResult = await uploadProfilePhotoToCloudinary(user.uid, result.assets[0].uri);
         
         if (uploadResult.success) {
           setPhotoURL(uploadResult.photoURL);
+          // Update profile di Firestore
+          await updateUserProfile(user.uid, { photoURL: uploadResult.photoURL });
           Alert.alert('Berhasil', 'Foto profil berhasil diupdate');
         } else {
           Alert.alert('Error', uploadResult.error || 'Gagal upload foto');

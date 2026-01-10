@@ -33,7 +33,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Container, warnaGlobal } from "../../styles";
 import { useAuth } from "../../context/AuthContext";
-import { createArtikel, uploadArtikelThumbnail } from "../../services/artikelService";
+import { createArtikel } from "../../services/artikelService";
+import { uploadArtikelThumbnailToCloudinary } from "../../services/cloudinaryService";
 import * as ImagePicker from "expo-image-picker";
 
 const CATEGORIES = [
@@ -123,16 +124,17 @@ export default function CreateArtikel() {
     try {
       setLoading(true);
 
-      // Upload thumbnail ke Firebase Storage jika ada
+      // Upload thumbnail ke Cloudinary jika ada (FREE!)
       let thumbnailURL = '';
       if (thumbnail) {
-        console.log('📷 Uploading thumbnail...');
-        const uploadResult = await uploadArtikelThumbnail(user.uid, thumbnail);
+        console.log('📷 Uploading thumbnail to Cloudinary...');
+        const uploadResult = await uploadArtikelThumbnailToCloudinary(user.uid, thumbnail);
         if (uploadResult.success) {
           thumbnailURL = uploadResult.thumbnailURL;
           console.log('📷 Thumbnail URL:', thumbnailURL);
         } else {
-          console.warn('📷 Thumbnail upload failed, continuing without thumbnail');
+          console.warn('📷 Thumbnail upload failed:', uploadResult.error);
+          Alert.alert('Peringatan', 'Gagal upload thumbnail. Artikel tetap akan dibuat tanpa gambar.');
         }
       }
 
@@ -140,7 +142,7 @@ export default function CreateArtikel() {
         title: title.trim(),
         content: content.trim(),
         category: category,
-        thumbnail: thumbnailURL, // Gunakan URL dari Firebase Storage
+        thumbnail: thumbnailURL, // Gunakan URL dari Cloudinary
       };
 
       const result = await createArtikel(user.uid, artikelData);
