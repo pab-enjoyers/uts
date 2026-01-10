@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Alert, Switch } from "react-native";
 import { Container, warnaGlobal } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -10,8 +11,37 @@ import {
   Heading,
 } from "@gluestack-ui/themed";
 import { router } from "expo-router";
+import { useAuth } from "../../context/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Settings() {
+  const { logout } = useAuth();
+  const [logoutLoading, setLogoutLoading] = React.useState(false);
+  const [alwaysShowOnboarding, setAlwaysShowOnboarding] = useState(false);
+
+  // Load toggle state on mount
+  useEffect(() => {
+    const loadOnboardingSetting = async () => {
+      try {
+        const value = await AsyncStorage.getItem('alwaysShowOnboarding');
+        setAlwaysShowOnboarding(value === 'true');
+      } catch (error) {
+        console.log('Error loading onboarding setting:', error);
+      }
+    };
+    loadOnboardingSetting();
+  }, []);
+
+  // Handle toggle change
+  const handleToggleOnboarding = async (value) => {
+    try {
+      setAlwaysShowOnboarding(value);
+      await AsyncStorage.setItem('alwaysShowOnboarding', value ? 'true' : 'false');
+    } catch (error) {
+      console.log('Error saving onboarding setting:', error);
+    }
+  };
+
   // Menu sections - Props & State requirement (bisa jadi props atau state)
   const menuSections = [
     {
@@ -95,8 +125,32 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    // Logout logic - bisa ditambahkan nanti
-    console.log("Logout pressed");
+    Alert.alert(
+      'Logout',
+      'Apakah Anda yakin ingin keluar?',
+      [
+        {
+          text: 'Batal',
+          style: 'cancel'
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            setLogoutLoading(true);
+            const result = await logout();
+            setLogoutLoading(false);
+            
+            if (result.success) {
+              // Navigate to login and clear navigation stack
+              router.replace('/auth/login');
+            } else {
+              Alert.alert('Error', result.error || 'Gagal logout');
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -234,6 +288,46 @@ export default function Settings() {
                 </Box>
               )}
             </Pressable>
+          </Box>
+
+          {/* Reset Onboarding Button - for testing */}
+          <Box px="$5" mt="$2">
+            <Box
+              bg="$white"
+              px="$5"
+              py="$3.5"
+              borderRadius="$lg"
+              borderWidth={1}
+              borderColor={warnaGlobal.gray200}
+            >
+              <HStack alignItems="center" justifyContent="space-between">
+                <HStack alignItems="center" space="md" flex={1}>
+                  <Ionicons
+                    name="sparkles-outline"
+                    size={24}
+                    color={alwaysShowOnboarding ? warnaGlobal.primaryHex : (warnaGlobal.gray600Hex || "#4B5563")}
+                  />
+                  <VStack flex={1}>
+                    <Text
+                      fontSize="$md"
+                      color={warnaGlobal.gray900}
+                      fontWeight="$semibold"
+                    >
+                      Tampilkan Onboarding
+                    </Text>
+                    <Text fontSize="$xs" color={warnaGlobal.gray500}>
+                      Splash & onboarding muncul tiap buka app
+                    </Text>
+                  </VStack>
+                </HStack>
+                <Switch
+                  value={alwaysShowOnboarding}
+                  onValueChange={handleToggleOnboarding}
+                  trackColor={{ false: '#E5E7EB', true: warnaGlobal.primaryHex }}
+                  thumbColor={alwaysShowOnboarding ? '#fff' : '#f4f3f4'}
+                />
+              </HStack>
+            </Box>
           </Box>
         </VStack>
       </Container>

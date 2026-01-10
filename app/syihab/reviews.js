@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Container, warnaGlobal, IconButton } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -8,18 +8,106 @@ import {
   Heading,
   Text,
   Pressable,
-  Image,
+  Spinner,
 } from "@gluestack-ui/themed";
-import { useLocalSearchParams, router } from "expo-router";
-import { getReviewsByResep, getAverageRating, getTotalReviews } from "../../data/reviews";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
+import { TouchableOpacity } from "react-native";
+import { useAuth } from "../../context/AuthContext";
+import { 
+  getMealRatings, 
+  getAverageRating,
+  getUserRating,
+  toggleReviewLike
+} from "../../services/userService";
 
 export default function Reviews() {
+  const { user } = useAuth();
   const params = useLocalSearchParams();
-  const { recipeName = "Classic Greek Salad" } = params;
+  const { mealId, mealName = "Recipe", mealThumb } = params;
   
-  const reviews = getReviewsByResep(recipeName);
-  const avgRating = getAverageRating(recipeName);
-  const totalReviews = getTotalReviews(recipeName);
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState("0.0");
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [hasUserReviewed, setHasUserReviewed] = useState(false);
+
+  useEffect(() => {
+    loadReviews();
+    checkUserReview();
+  }, [mealId, user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Reload reviews when screen comes into focus
+      console.log("🔄 Reviews screen focused - reloading data");
+      loadReviews();
+      checkUserReview();
+    }, [mealId, user])
+  );
+
+  const checkUserReview = async () => {
+    if (!user?.uid || !mealId) {
+      setHasUserReviewed(false);
+      return;
+    }
+
+    try {
+      const result = await getUserRating(user.uid, mealId);
+      if (result.success && result.rating > 0) {
+        setHasUserReviewed(true);
+        console.log("✅ User sudah pernah review");
+      } else {
+        setHasUserReviewed(false);
+        console.log("❌ User belum pernah review");
+      }
+    } catch (error) {
+      console.error("Error checking user review:", error);
+      setHasUserReviewed(false);
+    }
+  };
+
+  const loadReviews = async () => {
+    if (!mealId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      console.log("📊 Loading reviews for meal:", mealId);
+      
+      // Load all ratings
+      const ratingsResult = await getMealRatings(mealId);
+      if (ratingsResult.success && ratingsResult.ratings) {
+        setReviews(ratingsResult.ratings);
+        console.log("📊 Loaded", ratingsResult.ratings.length, "reviews");
+      }
+
+      // Load average rating
+      const avgResult = await getAverageRating(mealId);
+      if (avgResult.success) {
+        setAvgRating(avgResult.rating.toFixed(1));
+        setTotalCount(avgResult.count);
+        console.log("📊 Average rating:", avgResult.rating, "- Total:", avgResult.count);
+      }
+    } catch (error) {
+      console.error("Error loading reviews:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleLike = async (reviewId) => {
+    if (!user?.uid) return;
+    
+    try {
+      await toggleReviewLike(mealId, reviewId, user.uid);
+      loadReviews(); // Reload to get updated likes
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
 
   const renderStars = (rating) => {
     return [...Array(5)].map((_, index) => (
@@ -30,6 +118,35 @@ export default function Reviews() {
         color={index < rating ? warnaGlobal.amber400Hex : warnaGlobal.gray300Hex}
       />
     ));
+  };
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return parts[0][0] + parts[1][0];
+    }
+    return name[0];
+  };
+
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return "Baru saja";
+    
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return "Baru saja";
+    if (diffMins < 60) return `${diffMins} menit lalu`;
+    if (diffHours < 24) return `${diffHours} jam lalu`;
+    if (diffDays < 30) return `${diffDays} hari lalu`;
+    
+    // Format like "Nov 10"
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]} ${date.getDate()}`;
   };
 
   return (
@@ -63,60 +180,69 @@ export default function Reviews() {
       </Box>
 
       <Container scrollable bg="$white" padding="$0">
-        <VStack space="md" mt="$24" pb="$8">
-          {/* Rating Summary */}
-          <VStack space="md" px="$5" py="$6" bg={warnaGlobal.gray50}>
-            <HStack alignItems="center" justifyContent="center" space="md">
-              <VStack alignItems="center">
-                <Text fontSize="$4xl" fontWeight="$bold" color={warnaGlobal.primary}>
-                  {avgRating}
-                </Text>
-                <HStack space="xs" mt="$1">
-                  {renderStars(Math.round(parseFloat(avgRating)))}
-                </HStack>
-                <Text fontSize="$sm" color={warnaGlobal.gray500} mt="$1">
-                  {totalReviews} Reviews
-                </Text>
-              </VStack>
-            </HStack>
-
-            <Pressable
-              onPress={() => router.push({
-                pathname: "/syihab/rate-resep",
-                params: { recipeName }
-              })}
-              bg={warnaGlobal.primary}
-              py="$3"
-              borderRadius="$xl"
-              alignItems="center"
-            >
-              <Text color="$white" fontSize="$sm" fontWeight="$semibold">
-                Tulis Ulasan
-              </Text>
-            </Pressable>
+        {loading ? (
+          <VStack flex={1} justifyContent="center" alignItems="center" mt="$32" py="$20">
+            <Spinner size="large" color={warnaGlobal.primary} />
+            <Text mt="$3" color={warnaGlobal.gray500}>Memuat ulasan...</Text>
           </VStack>
+        ) : (
+          <VStack space="md" mt="$24" pb="$8">
+            {/* Rating Summary */}
+            <VStack space="md" px="$5" py="$6" bg={warnaGlobal.gray50}>
+              <HStack alignItems="center" justifyContent="center" space="md">
+                <VStack alignItems="center">
+                  <Text fontSize="$4xl" fontWeight="$bold" color={warnaGlobal.primary}>
+                    {avgRating}
+                  </Text>
+                  <HStack space="xs" mt="$1">
+                    {renderStars(Math.round(parseFloat(avgRating)))}
+                  </HStack>
+                  <Text fontSize="$sm" color={warnaGlobal.gray500} mt="$1">
+                    {totalCount} Reviews
+                  </Text>
+                </VStack>
+              </HStack>
 
-          {/* Reviews List */}
-          <VStack space="md" px="$5">
-            {reviews.length === 0 ? (
-              <VStack alignItems="center" py="$8">
-                <Text fontSize="$sm" color={warnaGlobal.gray500}>
-                  Belum ada ulasan. Jadilah yang pertama memberikan ulasan!
-                </Text>
-              </VStack>
-            ) : (
-              reviews.map((review) => (
-                <Pressable
-                  key={review.id}
-                  onPress={() => router.push({
-                    pathname: "/syihab/review-detail",
+              <Pressable
+                onPress={() => {
+                  console.log("🔄 Navigating to rate-resep, hasReviewed:", hasUserReviewed);
+                  router.push({
+                    pathname: "/syihab/rate-resep",
                     params: { 
-                      reviewId: review.id,
-                      recipeName 
+                      mealId,
+                      mealName,
+                      mealThumb
                     }
-                  })}
-                >
+                  });
+                }}
+                bg={warnaGlobal.primary}
+                py="$3"
+                borderRadius="$xl"
+                alignItems="center"
+              >
+                <Text color="$white" fontSize="$sm" fontWeight="$semibold">
+                  {hasUserReviewed ? "Edit Ulasan" : "Tulis Ulasan"}
+                </Text>
+              </Pressable>
+            </VStack>
+
+            {/* Reviews List */}
+            <VStack space="md" px="$5">
+              {reviews.length === 0 ? (
+                <VStack alignItems="center" py="$8">
+                  <Ionicons 
+                    name="chatbox-outline" 
+                    size={64} 
+                    color={warnaGlobal.gray300Hex} 
+                  />
+                  <Text fontSize="$sm" color={warnaGlobal.gray500} mt="$3" textAlign="center">
+                    Belum ada ulasan.{'\n'}Jadilah yang pertama memberikan ulasan!
+                  </Text>
+                </VStack>
+              ) : (
+                reviews.map((review, index) => (
                   <Box
+                    key={review.id || index}
                     bg="$white"
                     borderRadius="$xl"
                     p="$4"
@@ -130,67 +256,64 @@ export default function Reviews() {
                         h={40}
                         borderRadius="$full"
                         overflow="hidden"
-                        bg={warnaGlobal.light}
+                        bg={warnaGlobal.primary}
                         justifyContent="center"
                         alignItems="center"
                       >
-                        {typeof review.userAvatar === 'string' && review.userAvatar.startsWith('�') ? (
-                          <Text fontSize="$lg">{review.userAvatar}</Text>
-                        ) : (
-                          <Image
-                            source={review.userAvatar}
-                            alt={review.userName}
-                            w={40}
-                            h={40}
-                            borderRadius="$full"
-                          />
-                        )}
+                        <Text fontSize="$md" fontWeight="$bold" color="$white">
+                          {getInitials(review.userName || "User")}
+                        </Text>
                       </Box>
 
                       {/* Review Content */}
                       <VStack flex={1} space="xs">
                         <HStack justifyContent="space-between" alignItems="center">
                           <Text fontSize="$sm" fontWeight="$semibold">
-                            {review.userName}
+                            {review.userName || "Anonymous"}
                           </Text>
                           <Text fontSize="$xs" color={warnaGlobal.gray400}>
-                            {new Date(review.date).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric' 
-                            })}
+                            {getTimeAgo(review.createdAt)}
                           </Text>
                         </HStack>
 
                         <HStack space="xs">
-                          {renderStars(review.rating)}
+                          {renderStars(review.rating || 0)}
                         </HStack>
 
-                        <Text 
-                          fontSize="$sm" 
-                          color={warnaGlobal.gray600}
-                          numberOfLines={2}
-                        >
-                          {review.comment}
-                        </Text>
-
-                        <HStack space="xs" alignItems="center" mt="$1">
-                          <Ionicons 
-                            name="thumbs-up-outline" 
-                            size={14} 
-                            color={warnaGlobal.gray400Hex} 
-                          />
-                          <Text fontSize="$xs" color={warnaGlobal.gray400}>
-                            {review.helpful} membantu
+                        {review.review && (
+                          <Text 
+                            fontSize="$sm" 
+                            color={warnaGlobal.gray600}
+                            mt="$1"
+                          >
+                            {review.review}
                           </Text>
+                        )}
+
+                        {/* Like Button */}
+                        <HStack space="xs" alignItems="center" mt="$2">
+                          <TouchableOpacity 
+                            onPress={() => handleToggleLike(review.uid)}
+                            style={{ flexDirection: 'row', alignItems: 'center' }}
+                          >
+                            <Ionicons
+                              name={review.likedBy?.includes(user?.uid) ? "thumbs-up" : "thumbs-up-outline"}
+                              size={16}
+                              color={warnaGlobal.gray400Hex}
+                            />
+                            <Text fontSize="$xs" color={warnaGlobal.gray400} ml="$1">
+                              {review.likes || 0} membantu
+                            </Text>
+                          </TouchableOpacity>
                         </HStack>
                       </VStack>
                     </HStack>
                   </Box>
-                </Pressable>
-              ))
-            )}
+                ))
+              )}
+            </VStack>
           </VStack>
-        </VStack>
+        )}
       </Container>
     </Box>
   );

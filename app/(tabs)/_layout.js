@@ -1,12 +1,14 @@
 import React from "react";
 import { Platform } from "react-native";
 import { Tabs } from "expo-router";
-import { Box } from "@gluestack-ui/themed";
+import { Box, Text } from "@gluestack-ui/themed";
 // import { FontAwesome } from "@expo/vector-icons/FontAwesome";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, warnaGlobal } from "../../styles/theme";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TabsLayout() {
+  const { unreadNotifications } = useAuth();
   return (
     <Tabs
       screenOptions={{
@@ -58,7 +60,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="bookmark-tab"
         options={{
-          title: "Disimpan",
+          title: "Resep Tersimpan",
           headerShown: true,
           tabBarIcon: ({ color, size, focused }) => (
             <Box alignItems="center" gap="$1">
@@ -128,7 +130,7 @@ export default function TabsLayout() {
           title: "Notifikasi",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
-            <Box alignItems="center" gap="$1">
+            <Box alignItems="center" gap="$1" position="relative">
               {focused && (
                 <Box
                   w={40}
@@ -142,6 +144,31 @@ export default function TabsLayout() {
                 size={22}
                 color={color}
               />
+              {/* Badge untuk unread notifications */}
+              {unreadNotifications > 0 && (
+                <Box
+                  position="absolute"
+                  top={focused ? 5 : 2}
+                  right={-5}
+                  bg={warnaGlobal.primaryHex}
+                  borderRadius="$full"
+                  minWidth={18}
+                  height={18}
+                  alignItems="center"
+                  justifyContent="center"
+                  borderWidth={2}
+                  borderColor="$white"
+                >
+                  <Text
+                    color="$white"
+                    fontSize={10}
+                    fontWeight="$bold"
+                    lineHeight={14}
+                  >
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </Text>
+                </Box>
+              )}
             </Box>
           ),
         }}
