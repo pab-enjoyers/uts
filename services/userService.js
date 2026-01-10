@@ -14,6 +14,7 @@ import {
   where,
   getDocs,
   orderBy,
+  addDoc,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
@@ -368,3 +369,417 @@ export const getFavorites = getBookmarks;
  * ALIAS: Check if favorited (same as bookmarked)
  */
 export const isFavorited = isBookmarked;
+
+// ========================================
+// ⭐ RATING & REVIEW SYSTEM
+// ========================================
+
+/**
+ * Add or update rating for a meal
+ * @param {string} uid - User ID
+ * @param {string} mealId - Meal ID
+ * @param {number} rating - Rating (1-5)
+ * @param {string} review - Review text (optional)
+ * @returns {Object} { success, message }
+ */
+export const addRating = async (uid, mealId, rating, review = '') => {
+  try {
+    if (!uid || !mealId) {
+      return { success: false, message: 'User ID dan Meal ID diperlukan' };
+    }
+
+    if (rating < 1 || rating > 5) {
+      return { success: false, message: 'Rating harus antara 1-5' };
+    }
+
+    const ratingRef = doc(db, 'ratings', mealId, 'userRatings', uid);
+    
+    const ratingData = {
+      uid,
+      mealId,
+      rating: Number(rating),
+      review: review || '',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    };
+    
+    await setDoc(ratingRef, ratingData);
+    
+    return {
+      success: true,
+      message: 'Rating berhasil disimpan',
+      data: ratingData
+    };
+  } catch (error) {
+    console.error('Error adding rating:', error);
+    return {
+      success: false,
+      message: 'Gagal menyimpan rating'
+    };
+  }
+};
+
+/**
+ * Get average rating for a meal
+ * @param {string} mealId - Meal ID
+ * @returns {Object} { success, rating: number, count: number }
+ */
+export const getAverageRating = async (mealId) => {
+  try {
+    if (!mealId) {
+      return { success: false, rating: 0, count: 0 };
+    }
+
+    const ratingsRef = collection(db, 'ratings', mealId, 'userRatings');
+    const snapshot = await getDocs(ratingsRef);
+    
+    if (snapshot.empty) {
+      // No ratings yet, return default rating 4.0
+      return {
+        success: true,
+        rating: 4.0,
+        count: 0
+      };
+    }
+    
+    let totalRating = 0;
+    let count = 0;
+    
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      totalRating += data.rating || 0;
+      count++;
+    });
+    
+    const averageRating = count > 0 ? (totalRating / count) : 4.0;
+    
+    return {
+      success: true,
+      rating: Number(averageRating.toFixed(1)),
+      count
+    };
+  } catch (error) {
+    console.log('Error getting average rating:', error);
+    // Return default rating on error
+    return {
+      success: true,
+      rating: 4.0,
+      count: 0
+    };
+  }
+};
+
+/**
+ * Get user's rating for a meal
+ * @param {string} uid - User ID
+ * @param {string} mealId - Meal ID
+ * @returns {Object} { success, rating: number, review: string }
+ */
+export const getUserRating = async (uid, mealId) => {
+  try {
+    if (!uid || !mealId) {
+      return { success: false, rating: 0, review: '' };
+    }
+
+    const ratingRef = doc(db, 'ratings', mealId, 'userRatings', uid);
+    const ratingDoc = await getDoc(ratingRef);
+    
+    if (ratingDoc.exists()) {
+      const data = ratingDoc.data();
+      return {
+        success: true,
+        rating: data.rating || 0,
+        review: data.review || '',
+        createdAt: data.createdAt
+      };
+    }
+    
+    return {
+      success: true,
+      rating: 0,
+      review: ''
+    };
+  } catch (error) {
+    console.log('Error getting user rating:', error);
+    return {
+      success: false,
+      rating: 0,
+      review: ''
+    };
+  }
+};
+
+/**
+ * Get all ratings for a meal
+ * @param {string} mealId - Meal ID
+ * @returns {Object} { success, ratings: [] }
+ */
+export const getMealRatings = async (mealId) => {
+  try {
+    if (!mealId) {
+      return { success: false, ratings: [] };
+    }
+
+    const ratingsRef = collection(db, 'ratings', mealId, 'userRatings');
+    const q = query(ratingsRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    
+    const ratings = [];
+    snapshot.forEach((doc) => {
+      ratings.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    return {
+      success: true,
+      ratings
+    };
+  } catch (error) {
+    console.log('Error getting meal ratings:', error);
+    return {
+      success: false,
+      ratings: []
+    };
+  }
+};
+
+/**
+ * Delete user's rating
+ * @param {string} uid - User ID
+ * @param {string} mealId - Meal ID
+ * @returns {Object} { success, message }
+ */
+export const deleteRating = async (uid, mealId) => {
+  try {
+    if (!uid || !mealId) {
+      return { success: false, message: 'User ID dan Meal ID diperlukan' };
+    }
+
+    const ratingRef = doc(db, 'ratings', mealId, 'userRatings', uid);
+    await deleteDoc(ratingRef);
+    
+    return {
+      success: true,
+      message: 'Rating berhasil dihapus'
+    };
+  } catch (error) {
+    console.error('Error deleting rating:', error);
+    return {
+      success: false,
+      message: 'Gagal menghapus rating'
+    };
+  }
+};
+
+// ========================================
+// 🔔 NOTIFICATION SYSTEM
+// ========================================
+
+/**
+ * Add notification for user
+ * @param {string} uid - User ID
+ * @param {object} notificationData - { title, message, type, mealId }
+ * @returns {Object} { success, message }
+ */
+export const addNotification = async (uid, notificationData) => {
+  try {
+    console.log('🔵 ========== ADD NOTIFICATION START ==========');
+    console.log('🔵 User ID:', uid);
+    console.log('🔵 Notification data:', JSON.stringify(notificationData, null, 2));
+    
+    if (!uid) {
+      console.error('❌ addNotification: User ID diperlukan');
+      return { success: false, message: 'User ID diperlukan' };
+    }
+
+    if (!db) {
+      console.error('❌ addNotification: Firebase DB tidak tersedia');
+      return { success: false, message: 'Firebase DB tidak tersedia' };
+    }
+
+    console.log('🔵 Creating notificationsRef...');
+    const notificationsRef = collection(db, 'users', uid, 'notifications');
+    console.log('🔵 notificationsRef created:', notificationsRef.path);
+    
+    const notifDoc = {
+      ...notificationData,
+      read: false,
+      createdAt: Timestamp.now(),
+      readAt: null,
+    };
+    console.log('🔵 Document to save:', JSON.stringify(notifDoc, null, 2));
+    
+    console.log('🔵 Calling addDoc...');
+    const docRef = await addDoc(notificationsRef, notifDoc);
+    
+    console.log('✅ ========== NOTIFICATION SAVED SUCCESSFULLY ==========');
+    console.log('✅ Document ID:', docRef.id);
+    console.log('✅ Document path:', docRef.path);
+    
+    return {
+      success: true,
+      message: 'Notifikasi berhasil ditambahkan',
+      notificationId: docRef.id
+    };
+  } catch (error) {
+    console.error('❌ ========== ADD NOTIFICATION ERROR ==========');
+    console.error('❌ Error:', error);
+    console.error('❌ Error name:', error.name);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    return {
+      success: false,
+      message: 'Gagal menambahkan notifikasi',
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Get all notifications for user
+ * @param {string} uid - User ID
+ * @returns {Object} { success, notifications: [] }
+ */
+export const getNotifications = async (uid) => {
+  try {
+    if (!uid) {
+      return { success: false, notifications: [] };
+    }
+
+    const notificationsRef = collection(db, 'users', uid, 'notifications');
+    const q = query(notificationsRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    
+    const notifications = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      notifications.push({
+        id: doc.id,
+        ...data,
+        // Format createdAt to relative time
+        time: formatRelativeTime(data.createdAt),
+      });
+    });
+    
+    return {
+      success: true,
+      notifications
+    };
+  } catch (error) {
+    console.log('Error getting notifications:', error);
+    return {
+      success: false,
+      notifications: []
+    };
+  }
+};
+
+/**
+ * Mark notification as read
+ * @param {string} uid - User ID
+ * @param {string} notificationId - Notification ID
+ * @returns {Object} { success, message }
+ */
+export const markNotificationAsRead = async (uid, notificationId) => {
+  try {
+    if (!uid || !notificationId) {
+      return { success: false, message: 'User ID dan Notification ID diperlukan' };
+    }
+
+    const notifRef = doc(db, 'users', uid, 'notifications', notificationId);
+    await updateDoc(notifRef, {
+      read: true,
+      readAt: Timestamp.now(),
+    });
+    
+    return {
+      success: true,
+      message: 'Notifikasi ditandai sudah dibaca'
+    };
+  } catch (error) {
+    console.error('Error marking notification:', error);
+    return {
+      success: false,
+      message: 'Gagal menandai notifikasi'
+    };
+  }
+};
+
+/**
+ * Delete notification
+ * @param {string} uid - User ID
+ * @param {string} notificationId - Notification ID
+ * @returns {Object} { success, message }
+ */
+export const deleteNotification = async (uid, notificationId) => {
+  try {
+    if (!uid || !notificationId) {
+      return { success: false, message: 'User ID dan Notification ID diperlukan' };
+    }
+
+    const notifRef = doc(db, 'users', uid, 'notifications', notificationId);
+    await deleteDoc(notifRef);
+    
+    return {
+      success: true,
+      message: 'Notifikasi berhasil dihapus'
+    };
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    return {
+      success: false,
+      message: 'Gagal menghapus notifikasi'
+    };
+  }
+};
+
+/**
+ * Get unread notification count
+ * @param {string} uid - User ID
+ * @returns {Object} { success, count: number }
+ */
+export const getUnreadNotificationCount = async (uid) => {
+  try {
+    if (!uid) {
+      return { success: false, count: 0 };
+    }
+
+    const notificationsRef = collection(db, 'users', uid, 'notifications');
+    const q = query(notificationsRef, where('read', '==', false));
+    const snapshot = await getDocs(q);
+    
+    return {
+      success: true,
+      count: snapshot.size
+    };
+  } catch (error) {
+    console.log('Error getting unread count:', error);
+    return {
+      success: false,
+      count: 0
+    };
+  }
+};
+
+/**
+ * Helper: Format timestamp to relative time
+ */
+const formatRelativeTime = (timestamp) => {
+  if (!timestamp) return 'Baru saja';
+  
+  const now = new Date();
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Baru saja';
+  if (diffMins < 60) return `${diffMins} menit lalu`;
+  if (diffHours < 24) return `${diffHours} jam lalu`;
+  if (diffDays < 7) return `${diffDays} hari lalu`;
+  return date.toLocaleDateString('id-ID');
+};

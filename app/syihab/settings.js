@@ -1,4 +1,5 @@
 import React from "react";
+import { Alert } from "react-native";
 import { Container, warnaGlobal } from "../../styles";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -10,8 +11,12 @@ import {
   Heading,
 } from "@gluestack-ui/themed";
 import { router } from "expo-router";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Settings() {
+  const { logout } = useAuth();
+  const [logoutLoading, setLogoutLoading] = React.useState(false);
+
   // Menu sections - Props & State requirement (bisa jadi props atau state)
   const menuSections = [
     {
@@ -95,7 +100,32 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    console.log("Logout pressed");
+    Alert.alert(
+      'Logout',
+      'Apakah Anda yakin ingin keluar?',
+      [
+        {
+          text: 'Batal',
+          style: 'cancel'
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            setLogoutLoading(true);
+            const result = await logout();
+            setLogoutLoading(false);
+            
+            if (result.success) {
+              // Navigate to login and clear navigation stack
+              router.replace('/auth/login');
+            } else {
+              Alert.alert('Error', result.error || 'Gagal logout');
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (

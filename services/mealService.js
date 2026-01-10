@@ -208,6 +208,28 @@ export const listAllIngredients = async () => {
 };
 
 /**
+ * Search meal by main ingredient
+ * @param {string} ingredient - Nama ingredient (e.g., chicken, beef, tomato)
+ * @returns {Object} { success, meals: [] }
+ */
+export const searchMealByIngredient = async (ingredient) => {
+  if (!ingredient || ingredient.trim() === '') {
+    return { success: true, meals: [] };
+  }
+  
+  const result = await fetchFromAPI(`/filter.php?i=${encodeURIComponent(ingredient)}`);
+  
+  if (result.success) {
+    return {
+      success: true,
+      meals: result.data.meals || []
+    };
+  }
+  
+  return result;
+};
+
+/**
  * Filter meals by category
  * @param {string} category - Category name (e.g., "Seafood", "Vegetarian")
  * @returns {Object} { success, meals: [] }

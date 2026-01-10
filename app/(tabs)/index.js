@@ -24,6 +24,8 @@ import {
   removeBookmark,
   getBookmarks,
   isBookmarked as checkIsBookmarked,
+  getAverageRating,
+  addNotification,
 } from "../../services/userService";
 
 import {
@@ -50,10 +52,12 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [categories, setCategories] = useState([{ id: 0, name: "All" }]);
+  const [sortBy, setSortBy] = useState("default"); // default, name-asc, name-desc, time-asc
   
   // API Data states
   const [featuredMeals, setFeaturedMeals] = useState([]);
   const [popularMeals, setPopularMeals] = useState([]);
+  const [lastSeenMealIds, setLastSeenMealIds] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
   
   // Bookmark states
@@ -114,20 +118,55 @@ export default function HomePage() {
       // Fetch random meals untuk featured & popular
       const randomResult = await getRandomMeals(15);
       if (randomResult.success && randomResult.meals) {
-        // Convert API format ke format lokal dengan estimasi waktu
-        const meals = randomResult.meals.map((meal) => ({
-          id: meal.idMeal,
-          name: meal.strMeal,
-          image: meal.strMealThumb || "🍽️",
-          rating: (Math.random() * 2 + 3).toFixed(1), // Random 3-5
-          time: estimateCookingTime(meal), // Estimasi dari ingredients + instructions
-          bgColor: "$coolGray100",
-          category: meal.strCategory,
-          area: meal.strArea,
-        }));
+        // Convert API format ke format lokal dengan rating dari Firebase
+        const mealsWithRatings = await Promise.all(
+          randomResult.meals.map(async (meal) => {
+            const ratingResult = await getAverageRating(meal.idMeal);
+            return {
+              id: meal.idMeal,
+              name: meal.strMeal,
+              image: meal.strMealThumb || "🍽️",
+              rating: (ratingResult.rating || 4.0).toFixed(1), // Format to 1 decimal
+              ratingCount: ratingResult.count || 0,
+              time: estimateCookingTime(meal),
+              bgColor: "$coolGray100",
+              category: meal.strCategory,
+              area: meal.strArea,
+            };
+          })
+        );
 
-        setFeaturedMeals(meals.slice(0, 8));
-        setPopularMeals(meals.slice(8, 15));
+        const newFeatured = mealsWithRatings.slice(0, 8);
+        const newPopular = mealsWithRatings.slice(8, 15);
+        
+        setFeaturedMeals(newFeatured);
+        setPopularMeals(newPopular);
+        
+        // Check for new recipes and notify user
+        if (user && lastSeenMealIds.length > 0) {
+          const newMealIds = mealsWithRatings.map(m => m.id);
+          const newRecipes = mealsWithRatings.filter(
+            m => !lastSeenMealIds.includes(m.id)
+          );
+          
+          // Notify about first 3 new recipes only (avoid spam)
+          if (newRecipes.length > 0) {
+            const recipesToNotify = newRecipes.slice(0, 3);
+            for (const recipe of recipesToNotify) {
+              await addNotification(user.uid, {
+                title: "Resep Baru Tersedia!",
+                message: `Cek resep baru: ${recipe.name} dari ${recipe.area || 'berbagai negara'}`,
+                type: "new_recipe",
+                mealId: recipe.id,
+              });
+            }
+          }
+          
+          setLastSeenMealIds(newMealIds);
+        } else if (user) {
+          // First load, just save current meal IDs
+          setLastSeenMealIds(mealsWithRatings.map(m => m.id));
+        }
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -183,17 +222,26 @@ export default function HomePage() {
       const result = await searchMealByName(query);
 
       if (result.success && result.meals) {
-        const meals = result.meals.map((meal) => ({
-          id: meal.idMeal,
-          name: meal.strMeal,
-          image: meal.strMealThumb || "🍽️",
-          rating: (Math.random() * 2 + 3).toFixed(1),
-          time: estimateCookingTime(meal), // Estimasi dari complexity
-          bgColor: "$coolGray100",
-          category: meal.strCategory,
-          area: meal.strArea,
-        }));
-        setSearchResults(meals);
+        let mealsWithRatings = await Promise.all(
+          result.meals.map(async (meal) => {
+            const ratingResult = await getAverageRating(meal.idMeal);
+            return {
+              id: meal.idMeal,
+              name: meal.strMeal,
+              image: meal.strMealThumb || "🍽️",
+              rating: (ratingResult.rating || 4.0).toFixed(1), // Format to 1 decimal
+              ratingCount: ratingResult.count || 0,
+              time: estimateCookingTime(meal),
+              bgColor: "$coolGray100",
+              category: meal.strCategory,
+              area: meal.strArea,
+            };
+          })
+        );
+        
+        // Apply sorting
+        mealsWithRatings = applySorting(mealsWithRatings);
+        setSearchResults(mealsWithRatings);
       } else {
         setSearchResults([]);
       }
@@ -204,6 +252,35 @@ export default function HomePage() {
       setSearchLoading(false);
     }
   };
+
+  // ========================================
+  // 📊 SORTING FUNCTION
+  // ========================================
+  const applySorting = (meals) => {
+    const sorted = [...meals];
+    
+    switch (sortBy) {
+      case "name-asc":
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case "name-desc":
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      case "time-asc":
+        return sorted.sort((a, b) => parseInt(a.time) - parseInt(b.time));
+      default:
+        return sorted;
+    }
+  };
+
+  // Re-apply sorting when sortBy changes
+  useEffect(() => {
+    if (searchResults && searchResults.length > 0) {
+      setSearchResults(applySorting(searchResults));
+    }
+    if (selectedCategory !== "All" && (featuredMeals.length > 0 || popularMeals.length > 0)) {
+      setFeaturedMeals(applySorting(featuredMeals));
+      setPopularMeals(applySorting(popularMeals));
+    }
+  }, [sortBy]);
 
   // ========================================
   // 🏷️ CATEGORY FILTER HANDLER
@@ -222,19 +299,27 @@ export default function HomePage() {
       const result = await filterByCategory(categoryName);
 
       if (result.success && result.meals) {
-        const meals = result.meals.slice(0, 15).map((meal) => ({
-          id: meal.idMeal,
-          name: meal.strMeal,
-          image: meal.strMealThumb || "🍽️",
-          rating: (Math.random() * 2 + 3).toFixed(1),
-          time: estimateCookingTime(meal), // Estimasi dari complexity
-          bgColor: "$coolGray100",
-          category: categoryName,
-          area: meal.strArea || "",
-        }));
+        let mealsWithRatings = await Promise.all(
+          result.meals.slice(0, 15).map(async (meal) => {
+            const ratingResult = await getAverageRating(meal.idMeal);
+            return {
+              id: meal.idMeal,
+              name: meal.strMeal,
+              image: meal.strMealThumb || "🍽️",
+              rating: (ratingResult.rating || 4.0).toFixed(1), // Format to 1 decimal
+              ratingCount: ratingResult.count || 0,
+              time: estimateCookingTime(meal),
+              bgColor: "$coolGray100",
+              category: categoryName,
+              area: meal.strArea || "",
+            };
+          })
+        );
 
-        setFeaturedMeals(meals.slice(0, 8));
-        setPopularMeals(meals.slice(8, 15));
+        // Apply sorting
+        mealsWithRatings = applySorting(mealsWithRatings);
+        setFeaturedMeals(mealsWithRatings.slice(0, 8));
+        setPopularMeals(mealsWithRatings.slice(8, 15));
       }
     } catch (error) {
       console.error("Filter error:", error);
@@ -253,17 +338,45 @@ export default function HomePage() {
       return;
     }
 
+    console.log('📌 [DASHBOARD] handleBookmark called');
+    console.log('📌 [DASHBOARD] User ID:', user.uid);
+    console.log('📌 [DASHBOARD] Meal ID:', mealId);
+    console.log('📌 [DASHBOARD] Meal name:', mealData.name);
+
     try {
       const isCurrentlyBookmarked = bookmarkedIds.includes(mealId);
+      console.log('📌 [DASHBOARD] Is bookmarked:', isCurrentlyBookmarked);
 
       if (isCurrentlyBookmarked) {
         // Remove bookmark
+        console.log('🗑️ [DASHBOARD] Removing bookmark...');
         const result = await removeBookmark(user.uid, mealId);
+        console.log('🗑️ [DASHBOARD] Remove result:', result);
+        
         if (result.success) {
           setBookmarkedIds((prev) => prev.filter((id) => id !== mealId));
+          
+          // Send REMOVE notification
+          console.log("📢 [DASHBOARD] Sending REMOVE bookmark notification...");
+          try {
+            const notifResult = await addNotification(user.uid, {
+              title: "Bookmark Dihapus",
+              message: `${mealData.name} dihapus dari bookmark`,
+              type: "bookmark",
+              mealId: mealId,
+            });
+            console.log("📢 [DASHBOARD] ✅ REMOVE Notification result:", notifResult);
+            
+            if (!notifResult.success) {
+              console.error("📢 [DASHBOARD] ❌ REMOVE Notification GAGAL:", notifResult.message);
+            }
+          } catch (notifError) {
+            console.error("📢 [DASHBOARD] ❌ REMOVE Notification ERROR:", notifError);
+          }
         }
       } else {
         // Add bookmark
+        console.log('➕ [DASHBOARD] Adding bookmark...');
         const result = await addBookmark(user.uid, {
           idMeal: mealId,
           strMeal: mealData.name,
@@ -271,12 +384,32 @@ export default function HomePage() {
           strCategory: mealData.category || "",
           strArea: mealData.area || "",
         });
+        console.log('➕ [DASHBOARD] Add result:', result);
+        
         if (result.success) {
           setBookmarkedIds((prev) => [...prev, mealId]);
+          
+          // Send ADD notification
+          console.log("📢 [DASHBOARD] Sending ADD bookmark notification...");
+          try {
+            const notifResult = await addNotification(user.uid, {
+              title: "Bookmark Tersimpan",
+              message: `${mealData.name} ditambahkan ke bookmark`,
+              type: "bookmark",
+              mealId: mealId,
+            });
+            console.log("📢 [DASHBOARD] ✅ ADD Notification result:", notifResult);
+            
+            if (!notifResult.success) {
+              console.error("📢 [DASHBOARD] ❌ ADD Notification GAGAL:", notifResult.message);
+            }
+          } catch (notifError) {
+            console.error("📢 [DASHBOARD] ❌ ADD Notification ERROR:", notifError);
+          }
         }
       }
     } catch (error) {
-      console.error("Bookmark error:", error);
+      console.error("❌ [DASHBOARD] Bookmark error:", error);
       Alert.alert("Error", "Gagal menyimpan bookmark");
     }
   };
@@ -392,7 +525,7 @@ export default function HomePage() {
                   ) : null}
                 </Input>
               </Box>
-              <Pressable onPress={onRefresh}>
+              <Pressable onPress={() => router.push("/ingredient-search")}>
                 <Box
                   bg={warnaGlobal.primary}
                   p="$3"
@@ -403,13 +536,48 @@ export default function HomePage() {
                   alignItems="center"
                 >
                   <Ionicons 
-                    name={refreshing ? "refresh-outline" : "filter-outline"} 
+                    name="nutrition-outline" 
                     size={24} 
                     color="white" 
                   />
                 </Box>
               </Pressable>
             </HStack>
+
+            {/* Sort Options */}
+            {(searchQuery.length > 0 || selectedCategory !== "All") && (
+              <HStack space="sm" mt="$3" flexWrap="wrap">
+                <Text fontSize="$sm" color={warnaGlobal.gray600} alignSelf="center" mr="$2">
+                  Urutkan:
+                </Text>
+                {[
+                  { value: "default", label: "Default" },
+                  { value: "name-asc", label: "A-Z" },
+                  { value: "name-desc", label: "Z-A" },
+                  { value: "time-asc", label: "Waktu ↑" },
+                ].map((option) => (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => setSortBy(option.value)}
+                  >
+                    <Box
+                      px="$3"
+                      py="$1.5"
+                      borderRadius="$lg"
+                      bg={sortBy === option.value ? warnaGlobal.primary : "$coolGray100"}
+                    >
+                      <Text
+                        fontSize="$xs"
+                        fontWeight="$medium"
+                        color={sortBy === option.value ? "$white" : warnaGlobal.gray600}
+                      >
+                        {option.label}
+                      </Text>
+                    </Box>
+                  </Pressable>
+                ))}
+              </HStack>
+            )}
           </Box>
 
           {/* Show search results or normal view */}
@@ -453,6 +621,19 @@ export default function HomePage() {
             <>
               {/* Category Tabs - Horizontal Scroll */}
               <Box>
+                <HStack justifyContent="space-between" alignItems="center" px="$5" mb="$3">
+                  <Heading size="sm" fontWeight="$bold">
+                    Kategori
+                  </Heading>
+                  <Pressable onPress={() => router.push("/categories")}>
+                    <HStack space="xs" alignItems="center">
+                      <Text fontSize="$sm" color={warnaGlobal.primary} fontWeight="$medium">
+                        Lihat Semua
+                      </Text>
+                      <Ionicons name="chevron-forward" size={16} color={warnaGlobal.primaryHex} />
+                    </HStack>
+                  </Pressable>
+                </HStack>
                 <RNScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}

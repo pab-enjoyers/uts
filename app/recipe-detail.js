@@ -22,6 +22,10 @@ import {
   addBookmark,
   removeBookmark,
   isBookmarked as checkIsBookmarked,
+  getAverageRating,
+  getUserRating,
+  addRating,
+  addNotification,
 } from "../services/userService";
 
 import {
@@ -50,16 +54,23 @@ export default function RecipeDetailScreen() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const [averageRating, setAverageRating] = useState(4.0);
+  const [ratingCount, setRatingCount] = useState(0);
+  const [userRating, setUserRating] = useState(0);
 
   // Load meal details
   useEffect(() => {
     loadMealDetails();
   }, [mealId]);
 
-  // Check bookmark status
+  // Check bookmark status & load rating
   useEffect(() => {
     if (user && mealId) {
       checkBookmarkStatus();
+      loadRatings();
+    } else if (mealId) {
+      // Load average rating even if not logged in
+      loadAverageRating();
     }
   }, [user, mealId]);
 
@@ -111,24 +122,119 @@ export default function RecipeDetailScreen() {
     }
   };
 
+  const loadAverageRating = async () => {
+    try {
+      const result = await getAverageRating(mealId);
+      if (result.success) {
+        setAverageRating(result.rating || 4.0);
+        setRatingCount(result.count || 0);
+      }
+    } catch (error) {
+      console.log("Error loading rating:", error);
+    }
+  };
+
+  const loadRatings = async () => {
+    try {
+      // Load average rating
+      const avgResult = await getAverageRating(mealId);
+      if (avgResult.success) {
+        setAverageRating(avgResult.rating || 4.0);
+        setRatingCount(avgResult.count || 0);
+      }
+
+      // Load user's rating
+      const userRatingResult = await getUserRating(user.uid, mealId);
+      if (userRatingResult.success) {
+        setUserRating(userRatingResult.rating || 0);
+      }
+    } catch (error) {
+      console.log("Error loading ratings:", error);
+    }
+  };
+
+  const handleRating = async (rating) => {
+    if (!user) {
+      Alert.alert("Login Required", "Silakan login untuk memberikan rating");
+      return;
+    }
+
+    try {
+      const result = await addRating(user.uid, mealId, rating);
+      if (result.success) {
+        setUserRating(rating);
+        // Reload average rating
+        loadAverageRating();
+        
+        // Add notification
+        console.log("📢 Sending RATING notification...");
+        const notifResult = await addNotification(user.uid, {
+          title: "Rating Tersimpan",
+          message: `Anda memberikan rating ${rating}⭐ untuk ${meal?.strMeal || 'resep ini'}`,
+          type: "rating",
+          mealId: mealId,
+        });
+        console.log("📢 Notification result:", notifResult);
+        
+        Alert.alert("Success", "Rating berhasil disimpan");
+      } else {
+        Alert.alert("Error", result.message || "Gagal menyimpan rating");
+      }
+    } catch (error) {
+      console.error("Error adding rating:", error);
+      Alert.alert("Error", "Gagal menyimpan rating");
+    }
+  };
+
   const toggleBookmark = async () => {
     if (!user) {
       Alert.alert("Login Required", "Silakan login untuk menyimpan bookmark");
       return;
     }
 
-    if (!meal) return;
+    console.log('📌 toggleBookmark called, user:', user.uid);
+    console.log('📌 isSaved:', isSaved);
+    console.log('📌 meal:', meal?.strMeal);
 
     try {
       setBookmarkLoading(true);
-
+      
       if (isSaved) {
+        // Remove bookmark
+        console.log('🗑️ Removing bookmark...');
         const result = await removeBookmark(user.uid, mealId);
+        console.log('🗑️ Remove result:', result);
+        
         if (result.success) {
           setIsSaved(false);
+          
+          // Add notification - PASTI DIPANGGIL
+          console.log("📢 STARTING REMOVE bookmark notification...");
+          console.log("📢 User ID:", user.uid);
+          console.log("📢 Meal name:", meal.strMeal);
+          console.log("📢 Meal ID:", mealId);
+          
+          try {
+            const notifResult = await addNotification(user.uid, {
+              title: "Bookmark Dihapus",
+              message: `${meal.strMeal} dihapus dari bookmark`,
+              type: "bookmark",
+              mealId: mealId,
+            });
+            console.log("📢 ✅ REMOVE Notification result:", notifResult);
+            
+            if (!notifResult.success) {
+              console.error("📢 ❌ REMOVE Notification GAGAL:", notifResult.message);
+            }
+          } catch (notifError) {
+            console.error("📢 ❌ REMOVE Notification ERROR:", notifError);
+          }
+          
           Alert.alert("Success", "Bookmark dihapus");
         }
       } else {
+        // Add bookmark
+        console.log('➕ Adding bookmark...');
         const result = await addBookmark(user.uid, {
           idMeal: meal.idMeal,
           strMeal: meal.strMeal,
@@ -136,9 +242,36 @@ export default function RecipeDetailScreen() {
           strCategory: meal.strCategory,
           strArea: meal.strArea,
         });
+        console.log('➕ Add result:', result);
+        
         if (result.success) {
           setIsSaved(true);
+          
+          // Add notification - PASTI DIPANGGIL
+          console.log("📢 STARTING ADD bookmark notification...");
+          console.log("📢 User ID:", user.uid);
+          console.log("📢 Meal name:", meal.strMeal);
+          console.log("📢 Meal ID:", mealId);
+          
+          try {
+            const notifResult = await addNotification(user.uid, {
+              title: "Bookmark Tersimpan",
+              message: `${meal.strMeal} ditambahkan ke bookmark`,
+              type: "bookmark",
+              mealId: mealId,
+            });
+            console.log("📢 ✅ ADD Notification result:", notifResult);
+            
+            if (!notifResult.success) {
+              console.error("📢 ❌ ADD Notification GAGAL:", notifResult.message);
+            }
+          } catch (notifError) {
+            console.error("📢 ❌ ADD Notification ERROR:", notifError);
+          }
+          
           Alert.alert("Success", "Ditambahkan ke bookmark");
+        } else {
+          console.error('❌ Bookmark failed:', result.error);
         }
       }
     } catch (error) {
@@ -405,13 +538,45 @@ export default function RecipeDetailScreen() {
             <VStack space="md" px="$5">
               {/* Title and rating - DATA API */}
               <HStack alignItems="center" justifyContent="space-between">
-                <Heading size="lg" fontWeight="$bold">
+                <Heading size="lg" fontWeight="$bold" flex={1}>
                   {recipe.name}
                 </Heading>
-                <Text fontSize="$sm" color="$coolGray500">
-                  ⭐ {recipe.rating}
-                </Text>
+                <VStack alignItems="flex-end" space="xs">
+                  <HStack space="xs" alignItems="center">
+                    <Text fontSize="$sm" color={warnaGlobal.primary} fontWeight="$bold">
+                      ⭐ {averageRating}
+                    </Text>
+                    <Text fontSize="$xs" color="$coolGray500">
+                      ({ratingCount})
+                    </Text>
+                  </HStack>
+                  {userRating > 0 && (
+                    <Text fontSize="$xs" color="$coolGray400">
+                      Rating Anda: {userRating}⭐
+                    </Text>
+                  )}
+                </VStack>
               </HStack>
+
+              {/* Rating buttons */}
+              {user && (
+                <Box>
+                  <Text fontSize="$xs" color={warnaGlobal.gray600} mb="$2">
+                    Berikan rating:
+                  </Text>
+                  <HStack space="xs">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Pressable key={star} onPress={() => handleRating(star)}>
+                        <Ionicons
+                          name={userRating >= star ? "star" : "star-outline"}
+                          size={24}
+                          color={userRating >= star ? "#FFD700" : "#D1D5DB"}
+                        />
+                      </Pressable>
+                    ))}
+                  </HStack>
+                </Box>
+              )}
 
               {/* Author info - DATA API */}
               <HStack space="sm" alignItems="center">

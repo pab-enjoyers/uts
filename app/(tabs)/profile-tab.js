@@ -11,20 +11,59 @@ import {
   Pressable,
   Badge,
   BadgeText,
+  Spinner,
 } from "@gluestack-ui/themed";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { userData, profileResep } from "../../data/profile";
 import { useAuth } from "../../context/AuthContext";
+import { getBookmarks } from "../../services/userService";
 
 export default function ProfileTab() {
   // State untuk bookmark dan active tab (Props & State requirement)
   const [bookmarkedRecipes, setBookmarkedRecipes] = React.useState([]);
   const [activeTab, setActiveTab] = React.useState("recipe");
   const [logoutLoading, setLogoutLoading] = React.useState(false);
+  const [bookmarkCount, setBookmarkCount] = React.useState(0);
+  const [loadingStats, setLoadingStats] = React.useState(true);
   
   // Auth context
   const { logout, user } = useAuth();
+
+  /**
+   * Load bookmark count dari Firebase
+   */
+  const loadBookmarkCount = async () => {
+    if (!user || !user.uid) {
+      setBookmarkCount(0);
+      setLoadingStats(false);
+      return;
+    }
+
+    try {
+      setLoadingStats(true);
+      const result = await getBookmarks(user.uid);
+      if (result.success && result.bookmarks) {
+        setBookmarkCount(result.bookmarks.length);
+      } else {
+        setBookmarkCount(0);
+      }
+    } catch (error) {
+      console.log("Error loading bookmark count:", error);
+      setBookmarkCount(0);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  /**
+   * Auto-refresh bookmark count when screen focused
+   */
+  useFocusEffect(
+    React.useCallback(() => {
+      loadBookmarkCount();
+    }, [user])
+  );
 
   /**
    * Handle logout dengan konfirmasi
@@ -91,9 +130,32 @@ export default function ProfileTab() {
         </HStack>
       </Box>
 
-      {/* Scrollable Content */}
-      <Container scrollable bg="$white" padding="$0">
-        <VStack space="lg" px="$5" mt="$24" pb="$24">
+      {/* Not logged in view */}
+      {!user ? (
+        <Container scrollable bg="$white" padding="$0">
+          <VStack space="lg" px="$5" mt="$24" pb="$24">
+            <VStack space="md" alignItems="center" py="$10">
+              <Ionicons name="person-circle-outline" size={80} color={warnaGlobal.gray300Hex} />
+              <Heading size="md" color={warnaGlobal.gray900}>
+                Belum Login
+              </Heading>
+              <Text fontSize="$sm" color={warnaGlobal.gray500} textAlign="center">
+                Silakan login untuk melihat profile dan bookmark Anda
+              </Text>
+              <CustomButton
+                title="Login"
+                onPress={() => router.push('/auth/login')}
+                variant="solid"
+                size="md"
+                mt="$4"
+              />
+            </VStack>
+          </VStack>
+        </Container>
+      ) : (
+        // Logged in view
+        <Container scrollable bg="$white" padding="$0">
+          <VStack space="lg" px="$5" mt="$24" pb="$24">{/* Profile content continues... */}
           {/* Profile Header */}
           <VStack space="sm">
             {/* Avatar + Stats in Row */}
@@ -128,15 +190,19 @@ export default function ProfileTab() {
                   </Text>
                 </VStack>
                 <VStack alignItems="center">
-                  <Text
-                    fontSize="$lg"
-                    fontWeight="$bold"
-                    color={warnaGlobal.gray900}
-                  >
-                    {userData.stats.followers}M
-                  </Text>
+                  {loadingStats ? (
+                    <Spinner size="small" color={warnaGlobal.primary} />
+                  ) : (
+                    <Text
+                      fontSize="$lg"
+                      fontWeight="$bold"
+                      color={warnaGlobal.gray900}
+                    >
+                      {bookmarkCount}
+                    </Text>
+                  )}
                   <Text fontSize="$xs" color={warnaGlobal.gray500} mt="$1">
-                    Pengikut
+                    Bookmark
                   </Text>
                 </VStack>
                 <VStack alignItems="center">
@@ -434,6 +500,7 @@ export default function ProfileTab() {
           </Box>
         </VStack>
       </Container>
+      )}
     </Box>
   );
 }

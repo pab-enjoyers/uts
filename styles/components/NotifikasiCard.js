@@ -8,7 +8,7 @@ export function NotificationCard({ notification, onPress }) {
     <Pressable onPress={onPress}>
       <HStack
         space="md"
-        bg={warnaGlobal.gray50}
+        bg={notification.read ? warnaGlobal.gray50 : "#FFF4E5"}
         p="$4"
         borderRadius="$lg"
         alignItems="flex-start"
@@ -22,7 +22,7 @@ export function NotificationCard({ notification, onPress }) {
             {notification.message}
           </Text>
           <Text fontSize="$xs" color={warnaGlobal.gray400}>
-            {notification.timestamp}
+            {notification.time || notification.timestamp || 'Baru saja'}
           </Text>
         </VStack>
 
@@ -37,17 +37,13 @@ export function NotificationCard({ notification, onPress }) {
             alignItems="center"
           >
             <Ionicons
-              name={
-                notification.type === "save_recipe"
-                  ? "bookmark"
-                  : "notifications"
-              }
+              name="notifications"
               size={20}
               color="#F59E0B"
             />
           </Box>
-          {/* Unread Indicator Dot on Icon */}
-          {!notification.isRead && (
+          {/* Unread Indicator Dot on Icon - HILANG SAAT DIBACA */}
+          {!notification.read && (
             <Box
               position="absolute"
               top={-2}
