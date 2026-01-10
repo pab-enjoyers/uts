@@ -234,3 +234,40 @@ export const incrementViews = async (articleId) => {
     return { success: false };
   }
 };
+
+/**
+ * Toggle like on article
+ * @param {string} articleId 
+ * @param {boolean} isLiked - current like status
+ */
+export const toggleLikeArtikel = async (articleId, isLiked) => {
+  try {
+    const docRef = doc(db, ARTIKEL_COLLECTION, articleId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const currentLikes = docSnap.data().likes || 0;
+      const newLikes = isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+      
+      await updateDoc(docRef, {
+        likes: newLikes,
+      });
+      
+      return {
+        success: true,
+        likes: newLikes,
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Artikel tidak ditemukan',
+      };
+    }
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
