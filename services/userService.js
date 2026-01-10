@@ -1,7 +1,3 @@
-// ========================================
-// 📝 USER SERVICE - FIRESTORE OPERATIONS
-// CRUD operations untuk user profile di Firestore
-// ========================================
 
 import { 
   doc, 

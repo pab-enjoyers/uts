@@ -1,24 +1,7 @@
-// ========================================
-// ☁️ CLOUDINARY IMAGE UPLOAD SERVICE
-// Free alternative to Firebase Storage
-// ========================================
-
-// ⚠️ SETUP REQUIRED:
-// 1. Buat akun di https://cloudinary.com (GRATIS)
-// 2. Dari Dashboard, copy:
-//    - Cloud Name
-//    - API Key  
-//    - API Secret
-// 3. Buat Upload Preset (unsigned):
-//    - Settings > Upload > Upload Presets > Add upload preset
-//    - Signing Mode: Unsigned
-//    - Folder: gudang_resep (optional)
-//    - Save dan copy preset name
-// 4. Isi credentials di bawah:
 
 const CLOUDINARY_CONFIG = {
-  cloudName: 'ddi0qglff',      // Ganti dengan cloud name kamu
-  uploadPreset: 'gudang_resep', // Ganti dengan upload preset kamu
+  cloudName: 'ddi0qglff',      
+  uploadPreset: 'gudang_resep',
 };
 
 /**

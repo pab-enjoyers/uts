@@ -1,7 +1,3 @@
-// ========================================
-// 🍽️ MEAL SERVICE - TheMealDB API
-// Service untuk fetch data dari TheMealDB API (FREE endpoints)
-// ========================================
 
 const BASE_URL = 'https://www.themealdb.com/api/json/v1/1';
 
