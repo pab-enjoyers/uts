@@ -22,7 +22,7 @@ import {
 } from "@gluestack-ui/themed";
 
 export default function NotificationsPage() {
-  const { user } = useAuth();
+  const { user, setUnreadNotifications } = useAuth();
   
   // State untuk filter tabs (Props & State requirement)
   const [activeTab, setActiveTab] = useState("semua");
@@ -71,6 +71,7 @@ export default function NotificationsPage() {
       const countResult = await getUnreadNotificationCount(user.uid);
       if (countResult.success) {
         setUnreadCount(countResult.count);
+        setUnreadNotifications(countResult.count); // Update global context
         console.log('📊 Unread count:', countResult.count);
       }
     } catch (error) {
@@ -90,6 +91,11 @@ export default function NotificationsPage() {
     // Mark as read
     if (!notification.read && user) {
       await markNotificationAsRead(user.uid, notification.id);
+      
+      // Update unread count immediately
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadNotifications(prev => Math.max(0, prev - 1));
+      
       loadNotifications();
     }
 

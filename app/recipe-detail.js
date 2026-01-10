@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react";
 import { Alert, Linking, Share, Image } from "react-native";
 import { Container, warnaGlobal, IconButton, ShareModal } from "../styles";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 
 // API Services
@@ -73,6 +73,18 @@ export default function RecipeDetailScreen() {
       loadAverageRating();
     }
   }, [user, mealId]);
+
+  // Reload ratings when screen gains focus (e.g., returning from reviews page)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (mealId) {
+        loadAverageRating();
+        if (user) {
+          loadRatings();
+        }
+      }
+    }, [mealId, user])
+  );
 
   const loadMealDetails = async () => {
     try {
@@ -445,6 +457,39 @@ export default function RecipeDetailScreen() {
                           fontWeight="$normal"
                         >
                           share
+                        </Text>
+                      </HStack>
+                    </Pressable>
+
+                    {/* Review & Rating Menu - STAR ICON */}
+                    <Pressable
+                      onPress={() => {
+                        setShowMenu(false);
+                        router.push({
+                          pathname: "/syihab/reviews",
+                          params: { 
+                            mealId: meal.idMeal,
+                            mealName: meal.strMeal,
+                            mealThumb: meal.strMealThumb
+                          },
+                        });
+                      }}
+                      py="$2"
+                      px="$3"
+                      borderRadius="$md"
+                    >
+                      <HStack space="sm" alignItems="center">
+                        <Ionicons
+                          name="star-outline"
+                          size={22}
+                          color="#000000"
+                        />
+                        <Text
+                          fontSize="$sm"
+                          color="$black"
+                          fontWeight="$normal"
+                        >
+                          Review
                         </Text>
                       </HStack>
                     </Pressable>

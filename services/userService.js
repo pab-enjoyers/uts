@@ -392,6 +392,17 @@ export const addRating = async (uid, mealId, rating, review = '') => {
       return { success: false, message: 'Rating harus antara 1-5' };
     }
 
+    // Get user name from profile
+    let userName = 'Anonymous';
+    try {
+      const userProfile = await getUserProfile(uid);
+      if (userProfile.success && userProfile.data) {
+        userName = userProfile.data.nama || userProfile.data.displayName || userProfile.data.email || 'Anonymous';
+      }
+    } catch (error) {
+      console.log('Could not fetch user name:', error);
+    }
+
     const ratingRef = doc(db, 'ratings', mealId, 'userRatings', uid);
     
     const ratingData = {
@@ -399,6 +410,9 @@ export const addRating = async (uid, mealId, rating, review = '') => {
       mealId,
       rating: Number(rating),
       review: review || '',
+      userName,
+      likes: 0,
+      likedBy: [],
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };
@@ -569,6 +583,62 @@ export const deleteRating = async (uid, mealId) => {
     return {
       success: false,
       message: 'Gagal menghapus rating'
+    };
+  }
+};
+
+/**
+ * Toggle like on a review
+ * @param {string} mealId - Meal ID
+ * @param {string} reviewerId - Reviewer's user ID
+ * @param {string} currentUserId - Current user's ID who is liking
+ * @returns {Object} { success, message }
+ */
+export const toggleReviewLike = async (mealId, reviewerId, currentUserId) => {
+  try {
+    if (!mealId || !reviewerId || !currentUserId) {
+      return { success: false, message: 'Missing required parameters' };
+    }
+
+    const ratingRef = doc(db, 'ratings', mealId, 'userRatings', reviewerId);
+    const ratingDoc = await getDoc(ratingRef);
+    
+    if (!ratingDoc.exists()) {
+      return { success: false, message: 'Review tidak ditemukan' };
+    }
+
+    const data = ratingDoc.data();
+    const likedBy = data.likedBy || [];
+    const currentLikes = data.likes || 0;
+
+    let newLikedBy;
+    let newLikes;
+
+    if (likedBy.includes(currentUserId)) {
+      // Unlike
+      newLikedBy = likedBy.filter(id => id !== currentUserId);
+      newLikes = Math.max(0, currentLikes - 1);
+    } else {
+      // Like
+      newLikedBy = [...likedBy, currentUserId];
+      newLikes = currentLikes + 1;
+    }
+
+    await updateDoc(ratingRef, {
+      likedBy: newLikedBy,
+      likes: newLikes,
+      updatedAt: Timestamp.now()
+    });
+
+    return {
+      success: true,
+      message: 'Like berhasil diperbarui'
+    };
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    return {
+      success: false,
+      message: 'Gagal memperbarui like'
     };
   }
 };

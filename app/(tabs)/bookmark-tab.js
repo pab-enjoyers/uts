@@ -9,7 +9,7 @@ import { Container, warnaGlobal, RecipeListItem, CustomButton, Card } from "../.
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
-import { getBookmarks, removeBookmark } from "../../services/userService";
+import { getBookmarks, removeBookmark, addNotification } from "../../services/userService";
 import { getMealById, estimateCookingTime } from "../../services/mealService";
 
 import {
@@ -100,6 +100,9 @@ export default function BookmarkTab() {
   };
 
   const handleRemoveBookmark = async (mealId) => {
+    // Find bookmark data before showing alert
+    const bookmarkToRemove = bookmarks.find(b => b.id === mealId);
+    
     Alert.alert(
       "Hapus Bookmark",
       "Yakin ingin menghapus bookmark ini?",
@@ -109,13 +112,41 @@ export default function BookmarkTab() {
           text: "Hapus",
           style: "destructive",
           onPress: async () => {
+            console.log('📌 [BOOKMARK-TAB] handleRemoveBookmark called');
+            console.log('📌 [BOOKMARK-TAB] User ID:', user.uid);
+            console.log('📌 [BOOKMARK-TAB] Meal ID:', mealId);
+            console.log('📌 [BOOKMARK-TAB] Meal name:', bookmarkToRemove?.name);
+            
             try {
+              console.log('🗑️ [BOOKMARK-TAB] Removing bookmark...');
               const result = await removeBookmark(user.uid, mealId);
+              console.log('🗑️ [BOOKMARK-TAB] Remove result:', result);
+              
               if (result.success) {
                 setBookmarks((prev) => prev.filter((b) => b.id !== mealId));
+                
+                // Send REMOVE notification
+                console.log("📢 [BOOKMARK-TAB] Sending REMOVE bookmark notification...");
+                try {
+                  const notifResult = await addNotification(user.uid, {
+                    title: "Bookmark Dihapus",
+                    message: `${bookmarkToRemove?.name || 'Resep'} dihapus dari bookmark`,
+                    type: "bookmark",
+                    mealId: mealId,
+                  });
+                  console.log("📢 [BOOKMARK-TAB] ✅ REMOVE Notification result:", notifResult);
+                  
+                  if (!notifResult.success) {
+                    console.error("📢 [BOOKMARK-TAB] ❌ REMOVE Notification GAGAL:", notifResult.message);
+                  }
+                } catch (notifError) {
+                  console.error("📢 [BOOKMARK-TAB] ❌ REMOVE Notification ERROR:", notifError);
+                }
+                
                 Alert.alert("Success", "Bookmark dihapus");
               }
             } catch (error) {
+              console.error("❌ [BOOKMARK-TAB] Remove bookmark error:", error);
               Alert.alert("Error", "Gagal menghapus bookmark");
             }
           },

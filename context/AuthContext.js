@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   // Check auth state saat app load
   useEffect(() => {
@@ -220,6 +221,8 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated,
+    unreadNotifications,
+    setUnreadNotifications,
     register,
     login,
     logout,
