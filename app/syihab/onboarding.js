@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { router } from 'expo-router';
+import { Image } from 'react-native';
 import { 
   Box, 
   VStack,
@@ -11,6 +12,10 @@ import {
   Pressable
 } from '@gluestack-ui/themed';
 import { Container, warnaGlobal, spacing } from '../../styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Logo app
+const APP_LOGO = 'https://media.discordapp.net/attachments/1353606414383448065/1459527535414218753/Screenshot_2026-01-10_020147-removebg-preview.png?ex=69639a71&is=696248f1&hm=e411cbfbd3b2c81dd88a894c677cea60cdcb90f3ebcbb129657cdeed1926fcba&=&format=webp&quality=lossless';
 
 export default function OnboardingScreen() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -36,17 +41,19 @@ export default function OnboardingScreen() {
     }
   ];
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      // Slide terakhir, navigate ke Homepage
-      router.replace('/(tabs)');
+      // Slide terakhir, save status dan navigate ke login
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      router.replace('/auth/login');
     }
   };
 
-  const handleSkip = () => {
-    router.replace('/(tabs)');
+  const handleSkip = async () => {
+    await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+    router.replace('/auth/login');
   };
 
   const currentSlideData = slides[currentSlide];

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
+import { Image } from "react-native";
 import {
   Box,
   VStack,
@@ -8,6 +9,9 @@ import {
   Spinner,
 } from "@gluestack-ui/themed";
 import { Container, warnaGlobal, spacing } from "../../styles";
+
+// Logo app
+const APP_LOGO = 'https://media.discordapp.net/attachments/1353606414383448065/1459527535414218753/Screenshot_2026-01-10_020147-removebg-preview.png?ex=69639a71&is=696248f1&hm=e411cbfbd3b2c81dd88a894c677cea60cdcb90f3ebcbb129657cdeed1926fcba&=&format=webp&quality=lossless';
 
 export default function SplashScreen() {
   // iki loading state (Props & State)
@@ -33,21 +37,17 @@ export default function SplashScreen() {
         space="2xl"
         px="$6"
       >
-        {/* Logo/Icon */}
+        {/* Logo App */}
         <Box
-          bg={warnaGlobal.primary}
-          p="$8"
-          borderRadius="$full"
-          w={140}
-          h={140}
+          w={180}
+          h={180}
           justifyContent="center"
           alignItems="center"
-          shadowColor="$black"
-          shadowOffset={{ width: 0, height: 4 }}
-          shadowOpacity={0.3}
-          shadowRadius={8}
         >
-          <Text fontSize={64}>🍳</Text>
+          <Image
+            source={{ uri: APP_LOGO }}
+            style={{ width: 180, height: 180, resizeMode: 'contain' }}
+          />
         </Box>
 
         {/* App Title */}
@@ -57,15 +57,14 @@ export default function SplashScreen() {
             color={warnaGlobal.primary}
             fontWeight="$bold"
           >
-            Resep App
+            Gudang Resep
           </Heading>
           <Text 
             size="md" 
             color={warnaGlobal.accent}
             fontWeight="$medium"
           >
-            Kelompok 4 PAB 
-            IS-05-02
+            Kelompok 4 PAB IS-05-02
           </Text>
         </VStack>
 

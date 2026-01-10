@@ -2,13 +2,24 @@ import React, { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
 import { Box, Spinner, Text, VStack } from "@gluestack-ui/themed";
 import { useAuth } from "../context/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function InitialRedirect() {
   const { isAuthenticated, loading, checkAuthStatus } = useAuth();
   const [checking, setChecking] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(null);
 
   useEffect(() => {
     const init = async () => {
+      // Check if user has seen onboarding
+      try {
+        const seen = await AsyncStorage.getItem('hasSeenOnboarding');
+        setHasSeenOnboarding(seen === 'true');
+      } catch (error) {
+        console.log('Error checking onboarding status:', error);
+        setHasSeenOnboarding(false);
+      }
+      
       await checkAuthStatus();
       setChecking(false);
     };
@@ -17,7 +28,7 @@ export default function InitialRedirect() {
   }, []);
 
   // Show loading spinner while checking auth
-  if (loading || checking) {
+  if (loading || checking || hasSeenOnboarding === null) {
     return (
       <Box flex={1} justifyContent="center" alignItems="center" bg="$white">
         <VStack space="md" alignItems="center">
@@ -26,6 +37,11 @@ export default function InitialRedirect() {
         </VStack>
       </Box>
     );
+  }
+
+  // First time user - show splash/onboarding
+  if (!hasSeenOnboarding) {
+    return <Redirect href="/syihab/splash" />;
   }
 
   // Redirect based on authentication status

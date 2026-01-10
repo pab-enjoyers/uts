@@ -135,11 +135,13 @@ export default function ProfileTab() {
   };
 
   /**
-   * Auto-refresh bookmark count when screen focused
+   * Auto-refresh bookmark count and reviews when screen focused
    */
   useFocusEffect(
     React.useCallback(() => {
       loadBookmarkCount();
+      // Always load reviews for count display
+      loadUserReviews();
       // Refresh user profile juga
       if (refreshUserProfile) {
         refreshUserProfile();
@@ -148,11 +150,7 @@ export default function ProfileTab() {
       if (activeTab === "artikel") {
         loadUserArticles();
       }
-      // Load reviews if tab is ulasan
-      if (activeTab === "ulasan") {
-        loadUserReviews();
-      }
-    }, [user?.uid, activeTab])
+    }, [user?.uid])
   );
 
   // Effect tambahan untuk load data saat tab berubah
@@ -427,13 +425,17 @@ export default function ProfileTab() {
                   </Text>
                 </VStack>
                 <VStack alignItems="center">
-                  <Text
-                    fontSize="$lg"
-                    fontWeight="$bold"
-                    color={warnaGlobal.gray900}
-                  >
-                    0
-                  </Text>
+                  {loadingReviews ? (
+                    <Spinner size="small" color={warnaGlobal.primaryHex} />
+                  ) : (
+                    <Text
+                      fontSize="$lg"
+                      fontWeight="$bold"
+                      color={warnaGlobal.gray900}
+                    >
+                      {reviews.length}
+                    </Text>
+                  )}
                   <Text fontSize="$xs" color={warnaGlobal.gray500} mt="$1">
                     Ulasan
                   </Text>
