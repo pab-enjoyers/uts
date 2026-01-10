@@ -1040,11 +1040,37 @@ export const getUserReviews = async (uid) => {
           const data = userRatingSnap.data();
           console.log('📝 Found review for meal:', mealId, 'rating:', data.rating);
           
+          let mealName = data.mealName || '';
+          let mealThumb = data.mealThumb || '';
+          
+          // If meal data is missing, fetch from API
+          if (!mealThumb || mealThumb === '' || !mealName || mealName === 'Resep') {
+            try {
+              console.log('📡 Fetching meal data from API for:', mealId);
+              const response = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealId}`);
+              const apiData = await response.json();
+              if (apiData.meals && apiData.meals[0]) {
+                mealName = apiData.meals[0].strMeal || 'Resep';
+                mealThumb = apiData.meals[0].strMealThumb || '';
+                console.log('✅ Fetched meal:', mealName);
+                
+                // Update the rating document with meal data for future
+                const userRatingRef = doc(db, 'ratings', mealId, 'userRatings', uid);
+                await updateDoc(userRatingRef, {
+                  mealName: mealName,
+                  mealThumb: mealThumb
+                }).catch(() => {});
+              }
+            } catch (apiErr) {
+              console.log('⚠️ Failed to fetch meal data from API');
+            }
+          }
+          
           reviews.push({
             id: userRatingSnap.id,
             mealId: mealId,
-            mealName: data.mealName || 'Resep',
-            mealThumb: data.mealThumb || '',
+            mealName: mealName || 'Resep',
+            mealThumb: mealThumb,
             rating: data.rating || 0,
             review: data.review || '',
             userName: data.userName || 'Anonymous',
